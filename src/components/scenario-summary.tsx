@@ -127,7 +127,7 @@ export function ScenarioSummary({
         return (
           <li
             key={b.ownResult.join()}
-            className="group rounded-xl border bg-[var(--color-bg)] p-3.5 transition-all hover:border-ink/20 hover:shadow-[var(--shadow-lift)]"
+            className="group rounded-xl border bg-[var(--color-card)] p-3.5 transition-all hover:border-ink/20 hover:shadow-[var(--shadow-lift)]"
           >
             <div className="flex items-center justify-between gap-3">
               <div className="flex items-center gap-2.5">

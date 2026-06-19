@@ -38,7 +38,7 @@ export default function TeamsPage() {
                 <Link
                   key={t.code}
                   href={`/teams/${t.code}`}
-                  className={`lift group flex items-center gap-2.5 rounded-xl border bg-[var(--color-bg)] p-3 ${
+                  className={`lift group flex items-center gap-2.5 rounded-xl border bg-[var(--color-card)] p-3 ${
                     t.name === KOREA ? "border-primary/40 bg-surface" : ""
                   }`}
                 >

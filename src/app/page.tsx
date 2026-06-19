@@ -78,17 +78,8 @@ export default async function HomePage() {
     <div className="flex flex-col gap-10">
       <JsonLd data={sportsEventJsonLd()} />
       {/* 히어로 + 다음 경기 */}
-      <section className="relative -mt-2 overflow-hidden pt-2">
-        <span
-          className="glow-blob -left-10 -top-10 h-48 w-48"
-          style={{ background: "var(--color-primary)", opacity: 0.18 }}
-        />
-        <span
-          className="glow-blob right-0 top-10 h-40 w-40"
-          style={{ background: "var(--color-accent)", opacity: 0.16, animationDelay: "1.5s" }}
-        />
-
-        <div className="relative z-10 flex flex-col gap-5">
+      <section className="relative pt-2">
+        <div className="flex flex-col gap-5">
           <Reveal>
             <p className="text-sm font-medium text-muted">2026 FIFA 월드컵 · 대한민국</p>
             <h1 className="mt-1 text-3xl font-bold tracking-tight text-balance sm:text-4xl">
@@ -98,7 +89,7 @@ export default async function HomePage() {
 
           {koreaNext ? (
             <Reveal delay={80}>
-              <TiltCard className="relative overflow-hidden rounded-2xl border bg-[var(--color-bg)] p-6 shadow-sm">
+              <TiltCard className="panel relative overflow-hidden p-6 shadow-sm">
                 <div className="mb-3 flex items-center justify-between text-xs font-medium text-muted">
                   <span className="inline-flex items-center gap-1.5">
                     <span className="pulse-dot inline-block size-1.5 rounded-full bg-primary" />
@@ -125,7 +116,7 @@ export default async function HomePage() {
             </Reveal>
           ) : koreaLast ? (
             <Reveal delay={80}>
-              <div className="rounded-2xl border bg-surface p-6 text-center">
+              <div className="panel p-6 text-center">
                 <p className="text-xs font-medium text-muted">최근 경기</p>
                 <div className="mt-3 flex items-center justify-center gap-4 text-lg font-semibold">
                   <TeamLabel name={koreaLast.team1} className="flex-row-reverse" />
@@ -152,7 +143,7 @@ export default async function HomePage() {
           한국 진출 시나리오
         </SectionHeading>
 
-        <div className="rounded-2xl border bg-gradient-to-b from-surface/50 to-transparent p-4">
+        <div className="panel p-4">
           <div className="mb-3 flex flex-wrap items-center gap-2">
             <StatusPill status={koreaScenario.status} />
             <span className="text-sm text-muted tnum">
@@ -187,7 +178,9 @@ export default async function HomePage() {
           >
             {koreaGroup}조 순위
           </SectionHeading>
-          <StandingsTable rows={standings} />
+          <div className="panel overflow-hidden px-1">
+            <StandingsTable rows={standings} />
+          </div>
         </Reveal>
         <Reveal as="section" delay={40}>
           <SectionHeading
@@ -232,7 +225,9 @@ export default async function HomePage() {
           오늘의 경기
         </SectionHeading>
         {todayMatches.length > 0 ? (
-          <MatchList matches={todayMatches} />
+          <div className="panel px-4">
+            <MatchList matches={todayMatches} />
+          </div>
         ) : (
           <div className="rounded-xl border border-dashed py-8 text-center text-sm text-muted">
             오늘 예정된 경기가 없습니다.

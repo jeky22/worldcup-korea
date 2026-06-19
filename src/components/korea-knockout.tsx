@@ -19,7 +19,7 @@ function OppCard({ opp }: { opp: OppCandidate }) {
   const v = verdict(opp.fifaRank);
   const url = teamFlagUrl(opp.name, 40);
   return (
-    <div className="flex items-center gap-3 rounded-lg border bg-[var(--color-bg)] p-3">
+    <div className="flex items-center gap-3 rounded-lg border bg-[var(--color-card)] p-3">
       {url ? (
         // eslint-disable-next-line @next/next/no-img-element
         <img src={url} alt="" aria-hidden className="h-7 w-10 shrink-0 rounded-[3px] object-cover ring-1 ring-black/5" />
@@ -63,7 +63,7 @@ export function KoreaKnockout({ blocks }: { blocks: KoVerbBlock[] }) {
   );
 
   return (
-    <div className="rounded-2xl border bg-gradient-to-b from-surface/60 to-transparent p-4">
+    <div className="panel p-4">
       <div className="mb-1 flex items-center gap-2">
         <span className="text-base font-bold">한국이 마지막 경기에서…</span>
       </div>
@@ -81,7 +81,7 @@ export function KoreaKnockout({ blocks }: { blocks: KoVerbBlock[] }) {
         {active.ranks.map((step) => (
           <div
             key={step.rank}
-            className="animate-[reveal-up_400ms_var(--ease-out-expo)] rounded-xl border bg-[var(--color-bg)] p-3.5"
+            className="animate-[reveal-up_400ms_var(--ease-out-expo)] rounded-xl border bg-[var(--color-card)] p-3.5"
           >
             <div className="mb-2 flex items-center justify-between">
               <span className="text-sm font-semibold">조 {step.rank}위</span>

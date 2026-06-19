@@ -73,7 +73,7 @@ function MatchCard({
   return (
     <div
       style={{ height: CARD_H }}
-      className={`flex flex-col justify-center overflow-hidden rounded-lg border bg-[var(--color-bg)] transition-all duration-500 ${
+      className={`flex flex-col justify-center overflow-hidden rounded-lg border bg-[var(--color-card)] transition-all duration-500 ${
         m.hasKorea && teamsVisible
           ? "border-primary/60 ring-1 ring-primary/25"
           : ""

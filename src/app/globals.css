@@ -1,9 +1,10 @@
 @import "tailwindcss";
 
 :root {
-  --color-bg: oklch(1 0 0);
-  --color-surface: oklch(0.97 0.004 355);
+  --color-bg: oklch(0.985 0.005 355);
+  --color-surface: oklch(0.97 0.006 355);
   --color-surface-raised: oklch(0.93 0.006 355);
+  --color-card: oklch(1 0 0 / 0.82);
   --color-ink: oklch(0.2 0.012 355);
   --color-muted: oklch(0.42 0.008 355);
   --color-border: oklch(0.9 0.006 355);
@@ -21,6 +22,10 @@
   --color-warning-soft: oklch(0.96 0.03 75);
   --color-danger: oklch(0.44 0.19 355);
   --color-danger-soft: oklch(0.95 0.02 355);
+
+  --ambient-primary: oklch(0.52 0.19 355 / 0.08);
+  --ambient-accent: oklch(0.38 0.12 250 / 0.07);
+  --ambient-bottom: oklch(0.52 0.19 355 / 0.05);
 
   --font-sans: "Pretendard Variable", Pretendard, system-ui, sans-serif;
   --font-mono: var(--font-jetbrains-mono), ui-monospace, "JetBrains Mono", monospace;
@@ -62,6 +67,7 @@
   --color-warning-soft: var(--color-warning-soft);
   --color-danger: var(--color-danger);
   --color-danger-soft: var(--color-danger-soft);
+  --color-card: var(--color-card);
   --font-sans: var(--font-sans);
   --font-mono: var(--font-mono);
   --radius-sm: var(--radius-sm);
@@ -78,12 +84,25 @@ html {
 }
 
 body {
-  background: var(--color-bg);
+  background-color: var(--color-bg);
+  background-image:
+    radial-gradient(ellipse 80% 52% at 12% -8%, var(--ambient-primary), transparent 58%),
+    radial-gradient(ellipse 72% 48% at 88% 2%, var(--ambient-accent), transparent 52%),
+    radial-gradient(ellipse 88% 58% at 50% 108%, var(--ambient-bottom), transparent 62%);
+  background-attachment: fixed;
   color: var(--color-ink);
   font-family: var(--font-sans);
   font-size: 0.9375rem;
   line-height: 1.6;
   -webkit-font-smoothing: antialiased;
+}
+
+/* 카드·섹션 공통 — 은은한 글래스 */
+.panel {
+  border-radius: calc(var(--radius-lg) + 4px);
+  border: 1px solid oklch(0.9 0.006 355 / 0.85);
+  background: var(--color-card);
+  backdrop-filter: blur(10px);
 }
 
 .tnum {
@@ -174,7 +193,8 @@ body {
 }
 
 /* 그라데이션 텍스트 (히어로) */
-.gradient-ink {
+.gradient-ink,
+.gradient-primary {
   background: linear-gradient(
     100deg,
     var(--color-ink) 0%,

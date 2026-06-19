@@ -39,7 +39,7 @@ function VideoCard({ v }: { v: VideoItem }) {
     <button
       type="button"
       onClick={() => setPlaying(true)}
-      className="lift group block overflow-hidden rounded-xl border bg-[var(--color-bg)] text-left"
+      className="lift group block overflow-hidden rounded-xl border bg-[var(--color-card)] text-left"
     >
       <div className="relative aspect-video overflow-hidden bg-surface">
         {/* eslint-disable-next-line @next/next/no-img-element */}

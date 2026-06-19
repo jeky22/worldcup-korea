@@ -36,7 +36,7 @@ export function WatchLinks() {
           href={l.href}
           target="_blank"
           rel="noopener noreferrer"
-          className="lift group relative overflow-hidden rounded-xl border bg-[var(--color-bg)] p-3.5"
+          className="lift group relative overflow-hidden rounded-xl border bg-[var(--color-card)] p-3.5"
         >
           <span
             className="absolute inset-x-0 top-0 h-0.5"

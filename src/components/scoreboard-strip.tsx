@@ -83,7 +83,7 @@ export function ScoreboardStrip({ matches }: { matches: Match[] }) {
           return (
             <div
               key={m.id}
-              className={`relative flex w-40 shrink-0 snap-start flex-col gap-1.5 rounded-lg border bg-[var(--color-bg)] p-2.5 transition-colors hover:bg-surface ${
+              className={`relative flex w-40 shrink-0 snap-start flex-col gap-1.5 rounded-lg border bg-[var(--color-card)] p-2.5 transition-colors hover:bg-surface ${
                 isNext ? "border-primary/40" : ""
               }`}
             >
@@ -114,7 +114,7 @@ export function ScoreboardStrip({ matches }: { matches: Match[] }) {
         type="button"
         aria-label="이전"
         onClick={() => scroll(-1)}
-        className="absolute -left-3 top-1/2 hidden size-7 -translate-y-1/2 place-items-center rounded-full border bg-[var(--color-bg)] text-muted shadow-sm transition-colors hover:text-ink md:grid"
+        className="absolute -left-3 top-1/2 hidden size-7 -translate-y-1/2 place-items-center rounded-full border bg-[var(--color-card)] text-muted shadow-sm transition-colors hover:text-ink md:grid"
       >
         ‹
       </button>
@@ -122,7 +122,7 @@ export function ScoreboardStrip({ matches }: { matches: Match[] }) {
         type="button"
         aria-label="다음"
         onClick={() => scroll(1)}
-        className="absolute -right-3 top-1/2 hidden size-7 -translate-y-1/2 place-items-center rounded-full border bg-[var(--color-bg)] text-muted shadow-sm transition-colors hover:text-ink md:grid"
+        className="absolute -right-3 top-1/2 hidden size-7 -translate-y-1/2 place-items-center rounded-full border bg-[var(--color-card)] text-muted shadow-sm transition-colors hover:text-ink md:grid"
       >
         ›
       </button>

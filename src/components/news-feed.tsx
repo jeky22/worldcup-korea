@@ -39,7 +39,7 @@ export function NewsFeed({ items }: { items: NewsItem[] }) {
         href={featured.link}
         target="_blank"
         rel="noopener noreferrer"
-        className="lift group flex flex-col overflow-hidden rounded-xl border bg-[var(--color-bg)]"
+        className="lift group flex flex-col overflow-hidden rounded-xl border bg-[var(--color-card)]"
       >
         {featured.image && (
           <div className="relative aspect-[16/9] overflow-hidden bg-surface">
@@ -70,7 +70,7 @@ export function NewsFeed({ items }: { items: NewsItem[] }) {
       </a>
 
       {/* 나머지 목록 */}
-      <ul className="flex flex-col divide-y rounded-xl border bg-[var(--color-bg)]">
+      <ul className="flex flex-col divide-y rounded-xl border bg-[var(--color-card)]">
         {rest.map((n) => (
           <li key={n.title}>
             <a
