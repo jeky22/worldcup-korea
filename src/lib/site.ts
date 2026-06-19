@@ -23,10 +23,14 @@ export const SITE_KEYWORDS = [
   "월드컵 하이라이트",
 ];
 
-/** 배포 URL — Vercel 등에서 `NEXT_PUBLIC_SITE_URL=https://your-domain.com` 설정 권장 */
+/** 프로덕션 도메인 — Vercel 환경변수 미설정 시 fallback */
+const PRODUCTION_URL = "https://www.경우의수.kr";
+
+/** 배포 URL — Vercel에서 `NEXT_PUBLIC_SITE_URL=https://www.경우의수.kr` 설정 권장 */
 export function getSiteUrl(): string {
   const env = process.env.NEXT_PUBLIC_SITE_URL ?? process.env.SITE_URL;
   if (env) return env.replace(/\/$/, "");
+  if (process.env.VERCEL_ENV === "production") return PRODUCTION_URL;
   if (process.env.VERCEL_URL) return `https://${process.env.VERCEL_URL}`;
   return "http://localhost:3000";
 }
