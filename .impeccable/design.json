@@ -1,0 +1,300 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-06-19T12:00:00.000Z",
+  "title": "Design System: World Cup 2026 Hub",
+  "extensions": {
+    "colorMeta": {
+      "bg": {
+        "role": "neutral",
+        "displayName": "Pure White",
+        "canonical": "oklch(1.000 0.000 0)",
+        "tonalRamp": [
+          "oklch(0.15 0.000 0)",
+          "oklch(0.25 0.000 0)",
+          "oklch(0.35 0.000 0)",
+          "oklch(0.45 0.000 0)",
+          "oklch(0.55 0.000 0)",
+          "oklch(0.65 0.000 0)",
+          "oklch(0.75 0.000 0)",
+          "oklch(1.000 0.000 0)"
+        ]
+      },
+      "surface": {
+        "role": "neutral",
+        "displayName": "Surface",
+        "canonical": "oklch(0.97 0.004 355)",
+        "tonalRamp": [
+          "oklch(0.20 0.012 355)",
+          "oklch(0.35 0.010 355)",
+          "oklch(0.50 0.008 355)",
+          "oklch(0.65 0.006 355)",
+          "oklch(0.80 0.005 355)",
+          "oklch(0.90 0.004 355)",
+          "oklch(0.95 0.004 355)",
+          "oklch(0.97 0.004 355)"
+        ]
+      },
+      "ink": {
+        "role": "neutral",
+        "displayName": "Ink",
+        "canonical": "oklch(0.20 0.012 355)",
+        "tonalRamp": [
+          "oklch(0.15 0.012 355)",
+          "oklch(0.20 0.012 355)",
+          "oklch(0.30 0.010 355)",
+          "oklch(0.42 0.008 355)",
+          "oklch(0.55 0.006 355)",
+          "oklch(0.70 0.004 355)",
+          "oklch(0.85 0.003 355)",
+          "oklch(0.97 0.002 355)"
+        ]
+      },
+      "primary": {
+        "role": "primary",
+        "displayName": "Korea Red",
+        "canonical": "oklch(0.52 0.19 355)",
+        "tonalRamp": [
+          "oklch(0.25 0.14 355)",
+          "oklch(0.35 0.16 355)",
+          "oklch(0.44 0.19 355)",
+          "oklch(0.52 0.19 355)",
+          "oklch(0.62 0.17 355)",
+          "oklch(0.72 0.12 355)",
+          "oklch(0.85 0.06 355)",
+          "oklch(0.95 0.02 355)"
+        ]
+      },
+      "accent": {
+        "role": "accent",
+        "displayName": "Pitch Blue",
+        "canonical": "oklch(0.38 0.12 250)",
+        "tonalRamp": [
+          "oklch(0.20 0.10 250)",
+          "oklch(0.28 0.11 250)",
+          "oklch(0.38 0.12 250)",
+          "oklch(0.48 0.11 250)",
+          "oklch(0.58 0.09 250)",
+          "oklch(0.72 0.05 250)",
+          "oklch(0.88 0.025 250)",
+          "oklch(0.95 0.015 250)"
+        ]
+      },
+      "success": {
+        "role": "semantic",
+        "displayName": "Advance Green",
+        "canonical": "oklch(0.42 0.14 145)",
+        "tonalRamp": [
+          "oklch(0.25 0.10 145)",
+          "oklch(0.35 0.12 145)",
+          "oklch(0.42 0.14 145)",
+          "oklch(0.52 0.13 145)",
+          "oklch(0.65 0.10 145)",
+          "oklch(0.78 0.06 145)",
+          "oklch(0.90 0.03 145)",
+          "oklch(0.96 0.01 145)"
+        ]
+      }
+    },
+    "typographyMeta": {
+      "display": {
+        "displayName": "Display",
+        "purpose": "Page titles only. Fixed 1.75rem, no fluid clamp."
+      },
+      "headline": {
+        "displayName": "Headline",
+        "purpose": "Section titles, group names."
+      },
+      "title": {
+        "displayName": "Title",
+        "purpose": "Team names in match rows."
+      },
+      "body": {
+        "displayName": "Body",
+        "purpose": "Scenario explanations, prose. Max 65ch."
+      },
+      "label": {
+        "displayName": "Label",
+        "purpose": "Table headers, metadata, data source footers."
+      },
+      "data": {
+        "displayName": "Data Mono",
+        "purpose": "Scores, points, goal difference. Tabular alignment."
+      }
+    },
+    "shadows": [
+      {
+        "name": "lift",
+        "value": "0 4px 16px oklch(0 0 0 / 0.10)",
+        "purpose": "Dialogs, popovers, mobile bottom sheets only."
+      },
+      {
+        "name": "focus-ring",
+        "value": "0 0 0 3px oklch(0.52 0.19 355 / 0.25)",
+        "purpose": "Keyboard focus on interactive elements."
+      }
+    ],
+    "motion": [
+      {
+        "name": "ease-out-expo",
+        "value": "cubic-bezier(0.16, 1, 0.3, 1)",
+        "purpose": "Score updates, rank changes, section reveals."
+      },
+      {
+        "name": "duration-fast",
+        "value": "150ms",
+        "purpose": "Hover, focus state changes."
+      },
+      {
+        "name": "duration-score",
+        "value": "300ms",
+        "purpose": "Live score flash animation."
+      },
+      {
+        "name": "duration-reveal",
+        "value": "400ms",
+        "purpose": "Staggered section entrance on page load."
+      },
+      {
+        "name": "stagger-step",
+        "value": "60ms",
+        "purpose": "Delay between sibling list item reveals."
+      }
+    ],
+    "breakpoints": [
+      { "name": "sm", "value": "640px" },
+      { "name": "md", "value": "768px" },
+      { "name": "lg", "value": "1024px" }
+    ],
+    "cssCustomProperties": {
+      "--color-bg": "oklch(1.000 0.000 0)",
+      "--color-surface": "oklch(0.97 0.004 355)",
+      "--color-surface-raised": "oklch(0.93 0.006 355)",
+      "--color-ink": "oklch(0.20 0.012 355)",
+      "--color-muted": "oklch(0.42 0.008 355)",
+      "--color-border": "oklch(0.90 0.006 355)",
+      "--color-primary": "oklch(0.52 0.19 355)",
+      "--color-primary-deep": "oklch(0.44 0.19 355)",
+      "--color-accent": "oklch(0.38 0.12 250)",
+      "--color-accent-soft": "oklch(0.95 0.025 250)",
+      "--color-success": "oklch(0.42 0.14 145)",
+      "--color-success-soft": "oklch(0.95 0.02 145)",
+      "--color-warning": "oklch(0.52 0.13 75)",
+      "--color-warning-soft": "oklch(0.96 0.03 75)",
+      "--color-danger": "oklch(0.44 0.19 355)",
+      "--color-danger-soft": "oklch(0.95 0.02 355)",
+      "--font-sans": "\"Pretendard Variable\", Pretendard, system-ui, sans-serif",
+      "--font-mono": "\"JetBrains Mono\", ui-monospace, monospace",
+      "--radius-sm": "6px",
+      "--radius-md": "8px",
+      "--radius-lg": "12px",
+      "--ease-out-expo": "cubic-bezier(0.16, 1, 0.3, 1)",
+      "--duration-fast": "150ms",
+      "--duration-score": "300ms",
+      "--duration-reveal": "400ms",
+      "--z-dropdown": "100",
+      "--z-sticky": "200",
+      "--z-modal-backdrop": "300",
+      "--z-modal": "400",
+      "--z-toast": "500"
+    }
+  },
+  "components": [
+    {
+      "name": "Primary Button",
+      "kind": "button",
+      "refersTo": "button-primary",
+      "description": "Main CTA — scenario explore, retry on error.",
+      "html": "<button class=\"ds-btn-primary\" type=\"button\">시나리오 보기</button>",
+      "css": ".ds-btn-primary { font-family: \"Pretendard Variable\", Pretendard, system-ui, sans-serif; font-size: 0.9375rem; font-weight: 600; line-height: 1; background: #c41230; color: #ffffff; padding: 12px 20px; border: none; border-radius: 8px; cursor: pointer; transition: background 150ms cubic-bezier(0.16, 1, 0.3, 1); } .ds-btn-primary:hover { background: #9e0e26; } .ds-btn-primary:focus-visible { outline: none; box-shadow: 0 0 0 3px oklch(0.52 0.19 355 / 0.25); }"
+    },
+    {
+      "name": "Ghost Button",
+      "kind": "button",
+      "refersTo": "button-ghost",
+      "description": "Secondary actions, tab-like toggles.",
+      "html": "<button class=\"ds-btn-ghost\" type=\"button\">전체 경기</button>",
+      "css": ".ds-btn-ghost { font-family: \"Pretendard Variable\", Pretendard, system-ui, sans-serif; font-size: 0.9375rem; font-weight: 500; line-height: 1; background: transparent; color: #1a1517; padding: 10px 16px; border: none; border-radius: 8px; cursor: pointer; transition: background 150ms cubic-bezier(0.16, 1, 0.3, 1); } .ds-btn-ghost:hover { background: #f5f4f5; } .ds-btn-ghost:focus-visible { outline: none; box-shadow: 0 0 0 3px oklch(0.52 0.19 355 / 0.25); }"
+    },
+    {
+      "name": "Status Pill — Advance",
+      "kind": "chip",
+      "refersTo": "status-advance",
+      "description": "16강 진출 확정 상태.",
+      "html": "<span class=\"ds-pill-advance\"><svg width=\"12\" height=\"12\" viewBox=\"0 0 12 12\" fill=\"none\" aria-hidden=\"true\"><path d=\"M2 6l3 3 5-5\" stroke=\"currentColor\" stroke-width=\"1.5\" stroke-linecap=\"round\" stroke-linejoin=\"round\"/></svg>진출 확정</span>",
+      "css": ".ds-pill-advance { display: inline-flex; align-items: center; gap: 4px; font-family: \"Pretendard Variable\", Pretendard, system-ui, sans-serif; font-size: 0.75rem; font-weight: 500; background: #e6f5ee; color: #0d6b3f; padding: 4px 10px; border-radius: 9999px; }"
+    },
+    {
+      "name": "Status Pill — Conditional",
+      "kind": "chip",
+      "refersTo": "status-conditional",
+      "description": "조건부 진출·3위 경쟁 상태.",
+      "html": "<span class=\"ds-pill-conditional\"><svg width=\"12\" height=\"12\" viewBox=\"0 0 12 12\" fill=\"none\" aria-hidden=\"true\"><circle cx=\"6\" cy=\"6\" r=\"4.5\" stroke=\"currentColor\" stroke-width=\"1.5\"/><path d=\"M6 4v2.5\" stroke=\"currentColor\" stroke-width=\"1.5\" stroke-linecap=\"round\"/><circle cx=\"6\" cy=\"8.5\" r=\"0.5\" fill=\"currentColor\"/></svg>조건부</span>",
+      "css": ".ds-pill-conditional { display: inline-flex; align-items: center; gap: 4px; font-family: \"Pretendard Variable\", Pretendard, system-ui, sans-serif; font-size: 0.75rem; font-weight: 500; background: #fef8e6; color: #9a6700; padding: 4px 10px; border-radius: 9999px; }"
+    },
+    {
+      "name": "Match Row",
+      "kind": "custom",
+      "description": "Single match in schedule list — time, teams, score, venue.",
+      "html": "<div class=\"ds-match-row\" role=\"row\"><time class=\"ds-match-time\">19:00</time><div class=\"ds-match-teams\"><span class=\"ds-team\">대한민국</span><span class=\"ds-score\">2 – 1</span><span class=\"ds-team\">체코</span></div><span class=\"ds-match-venue\">과달라하라</span></div>",
+      "css": ".ds-match-row { display: flex; align-items: center; gap: 16px; padding: 12px 0; border-bottom: 1px solid #e2dfe0; min-height: 48px; } .ds-match-time { font-family: \"JetBrains Mono\", ui-monospace, monospace; font-size: 0.875rem; font-weight: 500; color: #5c5658; min-width: 48px; } .ds-match-teams { display: flex; align-items: center; gap: 12px; flex: 1; } .ds-team { font-family: \"Pretendard Variable\", Pretendard, system-ui, sans-serif; font-size: 1rem; font-weight: 600; color: #1a1517; } .ds-score { font-family: \"JetBrains Mono\", ui-monospace, monospace; font-size: 0.875rem; font-weight: 600; color: #1a1517; font-variant-numeric: tabular-nums; min-width: 56px; text-align: center; } .ds-match-venue { font-family: \"Pretendard Variable\", Pretendard, system-ui, sans-serif; font-size: 0.75rem; color: #5c5658; }"
+    },
+    {
+      "name": "Standings Row — Korea Highlight",
+      "kind": "custom",
+      "description": "Group standings table row with Korea team highlight.",
+      "html": "<tr class=\"ds-standings-row ds-standings-korea\"><td class=\"ds-rank\">2</td><td class=\"ds-team-name\">대한민국</td><td class=\"ds-stat\">2</td><td class=\"ds-stat\">1</td><td class=\"ds-stat\">0</td><td class=\"ds-stat\">1</td><td class=\"ds-stat\">2</td><td class=\"ds-stat\">2</td><td class=\"ds-stat\">0</td><td class=\"ds-pts\">3</td></tr>",
+      "css": ".ds-standings-row { height: 48px; } .ds-standings-row td { font-family: \"Pretendard Variable\", Pretendard, system-ui, sans-serif; font-size: 0.875rem; padding: 8px 12px; border-bottom: 1px solid #e2dfe0; } .ds-standings-korea { background: #f5f4f5; border-left: 3px solid #c41230; } .ds-standings-korea .ds-team-name { font-weight: 600; color: #1a1517; } .ds-rank, .ds-stat, .ds-pts { font-family: \"JetBrains Mono\", ui-monospace, monospace; font-variant-numeric: tabular-nums; text-align: center; color: #1a1517; } .ds-pts { font-weight: 600; }"
+    },
+    {
+      "name": "Data Source Footer",
+      "kind": "custom",
+      "description": "Source attribution below every data block.",
+      "html": "<p class=\"ds-source\">출처: openfootball · wcup2026 · 갱신: 2026-06-19 14:32 KST</p>",
+      "css": ".ds-source { font-family: \"Pretendard Variable\", Pretendard, system-ui, sans-serif; font-size: 0.75rem; font-weight: 500; letter-spacing: 0.02em; color: #5c5658; margin: 8px 0 0; }"
+    },
+    {
+      "name": "Mobile Tab Nav",
+      "kind": "nav",
+      "description": "Fixed bottom navigation for mobile match-day use.",
+      "html": "<nav class=\"ds-tab-nav\" aria-label=\"주요 메뉴\"><a class=\"ds-tab ds-tab-active\" href=\"/\">홈</a><a class=\"ds-tab\" href=\"/matches\">경기</a><a class=\"ds-tab\" href=\"/scenario\">시나리오</a><a class=\"ds-tab\" href=\"/teams\">팀</a></nav>",
+      "css": ".ds-tab-nav { display: flex; justify-content: space-around; align-items: center; height: 64px; background: #ffffff; border-top: 1px solid #e2dfe0; position: fixed; bottom: 0; left: 0; right: 0; padding-bottom: env(safe-area-inset-bottom, 0); } .ds-tab { font-family: \"Pretendard Variable\", Pretendard, system-ui, sans-serif; font-size: 0.75rem; font-weight: 500; color: #5c5658; text-decoration: none; padding: 8px 16px; border-bottom: 2px solid transparent; transition: color 150ms, border-color 150ms; } .ds-tab-active { color: #c41230; border-bottom-color: #c41230; font-weight: 600; }"
+    }
+  ],
+  "narrative": {
+    "northStar": "The Curiosity Engine",
+    "overview": "경기장 피날레 직전, 관중석에서 스마트폰을 꺼내는 순간 — 화면은 순백, 숫자가 먼저 말하고, 태극기 레드는 한국과 진출 상태에만 쓰인다. 사용자가 궁금해하는 것만 앞에 두고, Choreographed 모션은 스코어 갱신·순위 변화에만 적용한다.",
+    "keyCharacteristics": [
+      "궁금증 우선 레이아웃",
+      "표·숫자 중심 데이터 UI",
+      "모바일 경기 중 사용",
+      "출처·갱신 시각 항상 노출",
+      "진출 상태 색+아이콘+라벨 삼중 인코딩"
+    ],
+    "rules": [
+      { "name": "The No-Cream Rule", "body": "OKLCH L 0.84–0.97, C < 0.06, hue 40–100 웜 뉴트럴 배경 금지.", "section": "colors" },
+      { "name": "The White-On-Red Rule", "body": "primary·success·danger 채움 위 텍스트는 항상 흰색.", "section": "colors" },
+      { "name": "The Korea-Only Red Rule", "body": "primary red는 한국 팀·한국 CTA·진출 확정에만.", "section": "colors" },
+      { "name": "The Tabular Score Rule", "body": "모든 경기 숫자는 data 폰트 또는 tabular-nums.", "section": "typography" },
+      { "name": "The Fixed Scale Rule", "body": "제품 UI display에 fluid clamp 금지.", "section": "typography" },
+      { "name": "The Flat-Data Rule", "body": "기본 평면. 그림자는 모달·popover만.", "section": "elevation" },
+      { "name": "The No-Card-Shadow Rule", "body": "순위표·경기 행에 ambient shadow 금지.", "section": "elevation" }
+    ],
+    "dos": [
+      "Do 화면 최상단에 Curiosity Block을 배치한다.",
+      "Do 모든 데이터 블록에 소스·갱신 시각을 표기한다.",
+      "Do 스코어 갱신에 300ms ease-out-expo 전환을 쓴다.",
+      "Do prefers-reduced-motion에서 transition-duration을 0.01ms로 대체한다.",
+      "Do 진출 상태를 색상+아이콘+한글 라벨로 표현한다.",
+      "Do 터치 타깃 최소 44×44px을 유지한다."
+    ],
+    "donts": [
+      "Don't SaaS 대시보드처럼 보이게 한다 — 회색 카드 그리드, 히어로 메트릭, 아이콘+제목+설명 반복 카드.",
+      "Don't 뉴스 포털처럼 광고 밀집·기사 나열형 레이아웃을 쓴다.",
+      "Don't 게임/베팅 UI처럼 네온·과한 그라데이션·글래스모피즘을 쓴다.",
+      "Don't AI 슬롭 — 크림/베이지 바디, 섹션마다 작은 대문자 eyebrow, 그라데이션 텍스트.",
+      "Don't 48팀 데이터를 한 화면에 쏟아붓는다.",
+      "Don't 더미·목업 데이터로 빈 화면을 채운다.",
+      "Don't nested card를 쓴다."
+    ]
+  }
+}
