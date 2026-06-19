@@ -107,9 +107,24 @@ export function websiteJsonLd() {
     "@context": "https://schema.org",
     "@type": "WebSite",
     name: SITE_NAME,
+    alternateName: ["월드컵 경우의수 사이트", "월드컵 2026 경우의수", "경우의수.kr"],
     description: SITE_DESCRIPTION,
     url: absoluteUrl("/"),
     inLanguage: "ko-KR",
+  };
+}
+
+export function faqJsonLd(
+  items: { question: string; answer: string }[],
+) {
+  return {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    mainEntity: items.map(({ question, answer }) => ({
+      "@type": "Question",
+      name: question,
+      acceptedAnswer: { "@type": "Answer", text: answer },
+    })),
   };
 }
 

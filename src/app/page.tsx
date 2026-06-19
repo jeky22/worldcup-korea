@@ -19,20 +19,20 @@ import { DataError } from "@/components/data-error";
 import { Reveal, CountUp, TiltCard } from "@/components/motion";
 import { IconPlay, IconNews, IconBroadcast } from "@/components/icons";
 import { JsonLd } from "@/components/json-ld";
-import { pageMetadata, sportsEventJsonLd } from "@/lib/seo";
+import { pageMetadata, sportsEventJsonLd, faqJsonLd } from "@/lib/seo";
 
 export const metadata = pageMetadata({
-  title: "2026 FIFA 월드컵 — 대한민국 32강 시나리오",
+  title: "월드컵 경우의수 — 한국 32강 진출 계산",
   description:
-    "2026 FIFA 월드컵 대한민국 32강 진출 시나리오, A조 순위, 오늘 경기, 하이라이트 영상과 실시간 뉴스를 한곳에서 확인하세요.",
+    "월드컵 경우의수 사이트. 2026 FIFA 월드컵 조별리그 남은 경기별 진출 경우의 수, 대한민국 32강 시나리오, A조 순위, 경기 일정을 실데이터로 확인하세요.",
   path: "/",
   keywords: [
-    "2026 월드컵",
-    "한국 월드컵",
+    "월드컵 경우의수",
+    "월드컵 경우의수 사이트",
+    "월드컵 진출 경우의수",
+    "한국 월드컵 경우의수",
     "대한민국 32강",
-    "월드컵 시나리오",
     "A조 순위",
-    "월드컵 하이라이트",
   ],
 });
 
@@ -76,15 +76,39 @@ export default async function HomePage() {
 
   return (
     <div className="flex flex-col gap-10">
-      <JsonLd data={sportsEventJsonLd()} />
+      <JsonLd
+        data={[
+          sportsEventJsonLd(),
+          faqJsonLd([
+            {
+              question: "월드컵 경우의수는 어떻게 계산하나요?",
+              answer:
+                "조별리그 남은 경기의 모든 스코어 조합을 FIFA 2026 순위 규정(승점, 승자승, 골득실, 다득점, FIFA 랭킹)에 따라 계산합니다.",
+            },
+            {
+              question: "한국 32강 진출 경우의수는 어디서 보나요?",
+              answer:
+                "홈과 시나리오 페이지에서 A조 대한민국 기준 32강 직행·3위·탈락 비율과 경기 결과별 진출 조건을 확인할 수 있습니다.",
+            },
+            {
+              question: "월드컵 경우의수 사이트는 실제 데이터를 쓰나요?",
+              answer:
+                "openfootball 경기 결과와 FIFA 규정을 기반으로 하며, 더미 데이터는 사용하지 않습니다.",
+            },
+          ]),
+        ]}
+      />
       {/* 히어로 + 다음 경기 */}
       <section className="relative pt-2">
         <div className="flex flex-col gap-5">
           <Reveal>
-            <p className="text-sm font-medium text-muted">2026 FIFA 월드컵 · 대한민국</p>
+            <p className="text-sm font-medium text-muted">2026 FIFA 월드컵 · 경우의수.kr</p>
             <h1 className="mt-1 text-3xl font-bold tracking-tight text-balance sm:text-4xl">
-              대한민국, <span className="gradient-primary">경기 일정</span>
+              <span className="gradient-primary">월드컵 경우의수</span> — 한국 32강
             </h1>
+            <p className="mt-2 max-w-xl text-sm text-muted text-balance">
+              조별리그 남은 경기별 진출 경우의 수를 FIFA 규정대로 계산하는 월드컵 경우의수 사이트입니다.
+            </p>
           </Reveal>
 
           {koreaNext ? (

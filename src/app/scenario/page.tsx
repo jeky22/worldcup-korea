@@ -37,11 +37,17 @@ export async function generateMetadata({
   }
 
   return pageMetadata({
-    title: "진출 시나리오",
+    title: "월드컵 진출 경우의수 계산",
     description:
-      "2026 FIFA 월드컵 12개 조별리그 남은 경기 모든 스코어 조합별 진출 경우의 수. FIFA 규정 타이브레이커, 3위 팀 순위, 대한민국 32강 상대 분석.",
+      "월드컵 경우의수 — 2026 FIFA 월드컵 12개 조별리그 모든 스코어 조합별 진출 경우의 수. FIFA 타이브레이커, 3위 팀 순위, 대한민국 32강 상대 분석.",
     path: "/scenario",
-    keywords: ["월드컵 시나리오", "진출 경우의 수", "조별리그", "3위 순위", "타이브레이커"],
+    keywords: [
+      "월드컵 경우의수",
+      "월드컵 진출 경우의수",
+      "월드컵 조별리그 경우의수",
+      "진출 시나리오",
+      "타이브레이커",
+    ],
   });
 }
 
@@ -81,9 +87,9 @@ export default async function ScenarioPage({
         ])}
       />
       <header>
-        <h1 className="text-2xl font-bold tracking-tight">진출 시나리오</h1>
+        <h1 className="text-2xl font-bold tracking-tight">월드컵 진출 경우의수</h1>
         <p className="mt-1 text-sm text-muted">
-          남은 경기의 모든 스코어 조합을 FIFA 2026 순위 규정대로 계산한 경우의 수
+          남은 경기의 모든 스코어 조합을 FIFA 2026 순위 규정대로 계산한 월드컵 경우의수
         </p>
       </header>
 

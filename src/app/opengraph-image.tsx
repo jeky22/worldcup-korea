@@ -1,5 +1,5 @@
 import { ImageResponse } from "next/og";
-import { SITE_DESCRIPTION, SITE_NAME } from "@/lib/site";
+import { SITE_NAME } from "@/lib/site";
 
 export const runtime = "edge";
 export const alt = SITE_NAME;
@@ -42,10 +42,10 @@ export default function OpenGraphImage() {
         </div>
         <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
           <div style={{ fontSize: 56, fontWeight: 800, lineHeight: 1.15, letterSpacing: -1 }}>
-            2026 FIFA 월드컵
+            월드컵 경우의수
           </div>
           <div style={{ fontSize: 28, opacity: 0.82, maxWidth: 900, lineHeight: 1.4 }}>
-            {SITE_DESCRIPTION.slice(0, 72)}…
+            2026 FIFA 월드컵 조별리그 진출 경우의 수 · 한국 32강 시나리오
           </div>
         </div>
         <div style={{ fontSize: 22, opacity: 0.55 }}>경기 · 시나리오 · 대진표 · 팀 정보</div>
