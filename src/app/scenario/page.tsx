@@ -15,6 +15,7 @@ import { ThirdPlaceTable } from "@/components/third-place-table";
 import { KoreaKnockout } from "@/components/korea-knockout";
 import { DataError } from "@/components/data-error";
 import { JsonLd } from "@/components/json-ld";
+import { AdBanner } from "@/components/ads/ad-unit";
 import { breadcrumbJsonLd, pageMetadata } from "@/lib/seo";
 
 export const revalidate = 3600;
@@ -92,6 +93,8 @@ export default async function ScenarioPage({
           남은 경기의 모든 스코어 조합을 FIFA 2026 순위 규정대로 계산한 월드컵 경우의수
         </p>
       </header>
+
+      <AdBanner />
 
       {/* 조 선택 */}
       <div className="flex gap-1.5 overflow-x-auto pb-1 [scrollbar-width:none]">

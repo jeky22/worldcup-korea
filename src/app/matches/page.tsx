@@ -5,6 +5,7 @@ import { SourceFooter } from "@/components/ui";
 import { MatchesBrowser } from "@/components/matches-browser";
 import { DataError } from "@/components/data-error";
 import { JsonLd } from "@/components/json-ld";
+import { AdBanner } from "@/components/ads/ad-unit";
 import { breadcrumbJsonLd, pageMetadata } from "@/lib/seo";
 
 export const revalidate = 3600;
@@ -41,6 +42,8 @@ export default async function MatchesPage() {
           전체 104경기 · 시간은 한국시간(KST) 기준
         </p>
       </header>
+
+      <AdBanner />
 
       <MatchesBrowser matches={data.matches} korea={KOREA} />
 

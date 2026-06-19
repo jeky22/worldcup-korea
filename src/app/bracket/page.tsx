@@ -8,6 +8,7 @@ import { KoreaKnockout } from "@/components/korea-knockout";
 import { DataError } from "@/components/data-error";
 import { Reveal } from "@/components/motion";
 import { JsonLd } from "@/components/json-ld";
+import { AdBanner } from "@/components/ads/ad-unit";
 import { breadcrumbJsonLd, pageMetadata } from "@/lib/seo";
 
 export const revalidate = 3600;
@@ -46,6 +47,8 @@ export default async function BracketPage() {
           본선(32강~결승) 대진과 한국 32강 상대 분석
         </p>
       </header>
+
+      <AdBanner />
 
       {/* 한국 32강 상대 (강조) */}
       <Reveal as="section" delay={40}>

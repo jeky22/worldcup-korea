@@ -19,6 +19,7 @@ import { DataError } from "@/components/data-error";
 import { Reveal, CountUp, TiltCard } from "@/components/motion";
 import { IconPlay, IconNews, IconBroadcast } from "@/components/icons";
 import { JsonLd } from "@/components/json-ld";
+import { AdBanner, AdInFeed } from "@/components/ads/ad-unit";
 import { pageMetadata, sportsEventJsonLd, faqJsonLd } from "@/lib/seo";
 
 export const metadata = pageMetadata({
@@ -155,6 +156,8 @@ export default async function HomePage() {
         </div>
       </section>
 
+      <AdBanner className="my-2" />
+
       {/* 한국 진출 시나리오 (독단 한 줄) */}
       <Reveal as="section" delay={40}>
         <SectionHeading
@@ -227,6 +230,8 @@ export default async function HomePage() {
           )}
         </Reveal>
       </div>
+
+      <AdInFeed className="my-2" />
 
       {/* 뉴스 */}
       <Reveal as="section" delay={40}>
