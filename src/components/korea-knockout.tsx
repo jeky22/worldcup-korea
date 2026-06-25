@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import type { KoVerbBlock, OppCandidate, WDL } from "@/lib/bracket-types";
+import type { KoVerbBlock, KoRankStep, OppCandidate, WDL } from "@/lib/bracket-types";
 import { teamKo, teamFlagUrl } from "@/lib/teams";
 import { kstDate } from "@/lib/format";
 
@@ -85,44 +85,73 @@ const VERB_TAB: Record<WDL, { label: string; active: string; idle: string }> = {
   },
 };
 
+function dedupeRanks(blocks: KoVerbBlock[]): KoRankStep[] {
+  const seen = new Set<number>();
+  const out: KoRankStep[] = [];
+  for (const b of blocks) {
+    for (const step of b.ranks) {
+      const key = step.rank;
+      const existing = out.find((s) => s.rank === key);
+      // 매치 정보가 있는 step을 우선
+      if (!seen.has(key)) {
+        seen.add(key);
+        out.push(step);
+      } else if (existing && !existing.match && step.match) {
+        out[out.indexOf(existing)] = step;
+      }
+    }
+  }
+  return out.sort((a, b) => a.rank - b.rank);
+}
+
 export function KoreaKnockout({
   blocks,
+  decided = false,
 }: {
   blocks: KoVerbBlock[];
   totalCombos?: number;
+  /** 한국 조별리그 종료 시 W/D/L 선택 없이 확정 결과만 표시 */
+  decided?: boolean;
 }) {
   const [verb, setVerb] = useState<WDL>("W");
   const active = blocks.find((b) => b.verb === verb) ?? blocks[0];
+  const steps = decided ? dedupeRanks(blocks) : active.ranks;
 
   return (
     <div className="panel overflow-hidden p-0">
-      <div className="flex gap-1.5 border-b border-[var(--color-kor-red)]/10 bg-[var(--color-kor-red-soft)]/30 p-2">
-        {blocks.map((b) => {
-          const s = VERB_TAB[b.verb];
-          const on = verb === b.verb;
-          return (
-            <button
-              key={b.verb}
-              type="button"
-              onClick={() => setVerb(b.verb)}
-              className={`flex flex-1 flex-col items-center rounded-lg py-2.5 transition-all ${
-                on ? s.active : s.idle
-              }`}
-            >
-              <span className="text-sm font-bold">{s.label}</span>
-              <span className="text-xs font-black tabular-nums opacity-95">
-                {pct(b.share, b.share < 0.01 ? 1 : 0)}
-              </span>
-            </button>
-          );
-        })}
-      </div>
+      {decided ? (
+        <div className="border-b border-[var(--color-kor-gold)]/15 bg-[var(--color-kor-gold-soft)]/40 px-4 py-2.5 text-xs font-semibold text-[var(--color-kor-gold)]">
+          조별리그 종료 · 한국은 와일드카드(조 3위) 진출 시 아래 상대와 32강
+        </div>
+      ) : (
+        <div className="flex gap-1.5 border-b border-[var(--color-kor-red)]/10 bg-[var(--color-kor-red-soft)]/30 p-2">
+          {blocks.map((b) => {
+            const s = VERB_TAB[b.verb];
+            const on = verb === b.verb;
+            return (
+              <button
+                key={b.verb}
+                type="button"
+                onClick={() => setVerb(b.verb)}
+                className={`flex flex-1 flex-col items-center rounded-lg py-2.5 transition-all ${
+                  on ? s.active : s.idle
+                }`}
+              >
+                <span className="text-sm font-bold">{s.label}</span>
+                <span className="text-xs font-black tabular-nums opacity-95">
+                  {pct(b.share, b.share < 0.01 ? 1 : 0)}
+                </span>
+              </button>
+            );
+          })}
+        </div>
+      )}
 
-      <div className="flex flex-col gap-3 p-4" key={verb}>
-        {active.ranks.map((step) => (
+      <div className="flex flex-col gap-3 p-4" key={decided ? "decided" : verb}>
+        {steps.map((step) => (
           <div
             key={step.rank}
-            className={`animate-[reveal-up_400ms_var(--ease-out-expo)] overflow-hidden rounded-xl border-2 ${
+            className={`overflow-hidden rounded-xl border-2 ${
               step.result === "직행"
                 ? "border-[var(--color-kor-red)]/20"
                 : step.result === "와일드카드"
@@ -140,17 +169,19 @@ export function KoreaKnockout({
               }`}
             >
               <div className="flex items-baseline gap-2">
-                <span
-                  className={`text-2xl font-black tabular-nums ${
-                    step.result === "직행"
-                      ? "text-[var(--color-kor-red)]"
-                      : step.result === "와일드카드"
-                        ? "text-[var(--color-kor-gold)]"
-                        : "text-[var(--color-kor-ink)]"
-                  }`}
-                >
-                  {pct(step.share, step.share < 0.01 ? 1 : 0)}
-                </span>
+                {!decided && (
+                  <span
+                    className={`text-2xl font-black tabular-nums ${
+                      step.result === "직행"
+                        ? "text-[var(--color-kor-red)]"
+                        : step.result === "와일드카드"
+                          ? "text-[var(--color-kor-gold)]"
+                          : "text-[var(--color-kor-ink)]"
+                    }`}
+                  >
+                    {pct(step.share, step.share < 0.01 ? 1 : 0)}
+                  </span>
+                )}
                 <span className="text-sm font-semibold">
                   {step.rank}위
                   {step.rank === 3 &&

@@ -70,7 +70,7 @@ export function Reveal({
 /** 0 → value 카운트업 (뷰 진입 시 1회) */
 export function CountUp({
   value,
-  duration = 900,
+  duration = 1300,
   decimals = 0,
   suffix = "",
   prefix = "",

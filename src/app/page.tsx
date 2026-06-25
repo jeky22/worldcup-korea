@@ -4,17 +4,17 @@ import { getHighlightVideos, getNews } from "@/lib/feeds";
 import { computeStandings } from "@/lib/standings";
 import { analyzeGroup, focusBranches, analyzeThirdFollowUp } from "@/lib/scenario/engine";
 import { focusThirdPlaceWildcard } from "@/lib/scenario/third-place";
+import { analyzeKoreaSurvival } from "@/lib/scenario/korea-survival";
 import { koreaKnockout } from "@/lib/bracket";
 import { KOREA, teamKo, getTeam } from "@/lib/teams";
 import { kstDate, kstStamp } from "@/lib/format";
 import { SectionHeading, SourceFooter, StatusPill } from "@/components/ui";
 import { HomeHero } from "@/components/home-hero";
-import { StandingsTable } from "@/components/standings-table";
 import { ScenarioSummary } from "@/components/scenario-summary";
 import { MatchList } from "@/components/match-list";
 import { ScoreboardStrip } from "@/components/scoreboard-strip";
 import { WatchLinks } from "@/components/watch-links";
-import { KoreaKnockout } from "@/components/korea-knockout";
+import { KoreaGroupTabs } from "@/components/korea-group-tabs";
 import { HighlightVideos } from "@/components/highlight-videos";
 import { NewsFeed } from "@/components/news-feed";
 import { DataError } from "@/components/data-error";
@@ -61,9 +61,12 @@ export default async function HomePage() {
   const branches = focusBranches(matches, koreaGroup, KOREA);
   const thirdFollowUp = analyzeThirdFollowUp(matches, koreaGroup, KOREA, "L");
   const thirdPlaceWildcard = focusThirdPlaceWildcard(matches, koreaGroup, KOREA);
+  const survival = analyzeKoreaSurvival(matches, koreaGroup, KOREA);
   const koreaScenario = scenario.teams.find((t) => t.team === KOREA)!;
+  const statusMap = Object.fromEntries(
+    scenario.teams.map((t) => [t.team, t.status]),
+  );
   const koBlocks = koreaKnockout(matches);
-  const koreaAlive = scenario.remaining.length > 0;
 
   const koreaNext = matches
     .filter((m) => (m.team1 === KOREA || m.team2 === KOREA) && !m.score)
@@ -133,7 +136,7 @@ export default async function HomePage() {
 
       <AdBanner className="my-2" />
 
-      {/* 한국 진출 시나리오 (독단 한 줄) */}
+      {/* 한국 진출 시나리오 */}
       <Reveal as="section" delay={40}>
         <SectionHeading
           aside={
@@ -145,9 +148,22 @@ export default async function HomePage() {
           한국 진출 시나리오
         </SectionHeading>
 
-        <div className="panel p-4">
-          <div className="mb-3 flex flex-wrap items-center gap-2">
-            <StatusPill status={koreaScenario.status} />
+        {/* 상태 배너 */}
+        <div className="mb-4 flex flex-wrap items-center gap-x-4 gap-y-2 rounded-xl border border-[var(--color-kor-gold)]/20 bg-[var(--color-kor-gold-soft)]/40 px-4 py-3">
+          <StatusPill status={koreaScenario.status} />
+          {survival ? (
+            <div className="flex items-baseline gap-2">
+              <span className="text-sm font-medium text-muted">와일드카드 진출</span>
+              <CountUp
+                value={Math.round(survival.qualifyRate * 100)}
+                suffix="%"
+                className="text-2xl font-black tabular-nums text-[var(--color-kor-gold)]"
+              />
+              <span className="rounded bg-[var(--color-kor-gold)] px-1.5 py-0.5 text-[11px] font-bold text-white">
+                {survival.clinch}
+              </span>
+            </div>
+          ) : (
             <span className="text-sm text-muted tnum">
               직행{" "}
               <CountUp value={Math.round(koreaScenario.advanceRate * 100)} suffix="%" className="font-semibold text-success" />
@@ -156,64 +172,39 @@ export default async function HomePage() {
               {" · "}탈락{" "}
               <CountUp value={Math.round(koreaScenario.outRate * 100)} suffix="%" className="font-semibold text-danger" />
             </span>
-          </div>
-          <ScenarioSummary
-            focus={KOREA}
-            branches={branches}
-            totalCombos={scenario.totalCombos}
-            thirdFollowUp={thirdFollowUp}
-            thirdPlaceWildcard={thirdPlaceWildcard}
-            focusGroup={koreaGroup}
-          />
-          <p className="mt-3 text-xs text-muted">
-            {scenario.remaining.length === 0
-              ? `${koreaGroup}조 조별리그 종료 · 12개 조 3위 순위(승점→득실→득점) 기준`
-              : scenario.exact
-                ? `남은 ${scenario.remaining.length}경기, 모든 스코어 조합 ${scenario.totalCombos.toLocaleString()}가지를 FIFA 규정 기준으로 계산`
-                : `남은 ${scenario.remaining.length}경기 근사 계산(${scenario.totalCombos.toLocaleString()}조합)`}
-          </p>
-        </div>
-      </Reveal>
-
-      {/* 결과별 32강 상대 | A조 순위 (한 줄) */}
-      <div className="grid gap-x-8 gap-y-10 lg:grid-cols-2">
-
-
-        <Reveal as="section" delay={40}>
-          <SectionHeading
-            aside={
-              <Link href={`/scenario?g=${koreaGroup}`} className="text-accent hover:underline">
-                {koreaGroup}조 상세 →
-              </Link>
-            }
-          >
-            {koreaGroup}조 순위
-          </SectionHeading>
-          <div className="panel overflow-hidden px-1">
-            <StandingsTable rows={standings} />
-          </div>
-        </Reveal>
-        <Reveal as="section" delay={40}>
-          <SectionHeading
-            aside={
-              koreaAlive ? (
-                <Link href="/bracket" className="text-accent hover:underline">
-                  대진표 →
-                </Link>
-              ) : null
-            }
-          >
-            결과별 32강 상대
-          </SectionHeading>
-          {koreaAlive ? (
-            <KoreaKnockout blocks={koBlocks} totalCombos={scenario.totalCombos} />
-          ) : (
-            <div className="grid place-items-center rounded-2xl border border-dashed py-8 text-sm text-muted">
-              조별리그 종료 — 최종 결과를 확인하세요.
-            </div>
           )}
-        </Reveal>
-      </div>
+          <span className="ml-auto text-xs text-muted">
+            {scenario.remaining.length === 0
+              ? `${koreaGroup}조 조별리그 종료`
+              : `남은 ${scenario.remaining.length}경기 · ${scenario.totalCombos.toLocaleString()}조합`}
+          </span>
+        </div>
+
+        {/* 남은 경기 결과별 분기 (조별리그 진행 중일 때만) */}
+        {branches.length > 0 && (
+          <div className="mb-4">
+            <ScenarioSummary
+              focus={KOREA}
+              branches={branches}
+              totalCombos={scenario.totalCombos}
+              thirdFollowUp={thirdFollowUp}
+              thirdPlaceWildcard={thirdPlaceWildcard}
+              focusGroup={koreaGroup}
+            />
+          </div>
+        )}
+
+        {/* 3위 순위권 | A조 순위 | 32강 상대 */}
+        <KoreaGroupTabs
+          group={koreaGroup}
+          standings={standings}
+          statusMap={statusMap}
+          koBlocks={koBlocks}
+          koDecided={branches.length === 0}
+          survival={survival}
+          totalCombos={scenario.totalCombos}
+        />
+      </Reveal>
 
       <AdInFeed className="my-2" />
 

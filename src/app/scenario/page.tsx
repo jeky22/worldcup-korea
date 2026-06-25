@@ -118,7 +118,12 @@ export default async function ScenarioPage({
       {/* 순위 */}
       <section>
         <SectionHeading>{group}조 현재 순위</SectionHeading>
-        <StandingsTable rows={standings} />
+        <StandingsTable
+          rows={standings}
+          statusMap={Object.fromEntries(
+            scenario.teams.map((t) => [t.team, t.status]),
+          )}
+        />
       </section>
 
       {/* 한국 32강 상대 (A조 강조) */}

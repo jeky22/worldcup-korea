@@ -31,6 +31,9 @@ export default async function BracketPage() {
 
   const bracket = projectBracket(data.matches, { favor: KOREA });
   const koBlocks = koreaKnockout(data.matches);
+  const koreaDecided = !data.matches.some(
+    (m) => (m.team1 === KOREA || m.team2 === KOREA) && !m.score,
+  );
   const stamp = kstStamp(data.fetchedAt);
 
   return (
@@ -53,7 +56,7 @@ export default async function BracketPage() {
       {/* 한국 32강 상대 (강조) */}
       <Reveal as="section" delay={40}>
         <SectionHeading>한국 32강 상대 시뮬레이션</SectionHeading>
-        <KoreaKnockout blocks={koBlocks} />
+        <KoreaKnockout blocks={koBlocks} decided={koreaDecided} />
       </Reveal>
 
       {/* 한국 우승 시나리오 대진표 */}
