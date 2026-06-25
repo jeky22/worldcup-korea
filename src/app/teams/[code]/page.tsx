@@ -124,7 +124,7 @@ export default async function TeamDetailPage({
           선수 명단
         </SectionHeading>
         {squad ? (
-          <SquadTable players={sortSquad(squad)} />
+          <SquadTable players={sortSquad(squad)} teamKo={team.ko} />
         ) : (
           <p className="rounded-lg bg-surface p-4 text-sm text-muted">
             선수 명단 데이터를 준비 중입니다. `npm run sync`로 위키피디아 스쿼드를
@@ -133,8 +133,9 @@ export default async function TeamDetailPage({
         )}
         {squad && (
           <p className="mt-2 text-xs text-muted">
-            연봉·시장가치는 공개 무료 데이터로 신뢰도 있게 제공하기 어려워
-            현재 제외했습니다. (A매치·득점·소속은 실데이터)
+            선수 이름·소속 클럽을 누르면 구글 검색으로, <span className="font-medium">위키</span>·
+            <span className="font-medium">TM</span>(Transfermarkt) 칩으로 위키백과·이적/시장가치
+            정보로 연결됩니다. (A매치·득점·소속은 실데이터)
           </p>
         )}
       </section>
