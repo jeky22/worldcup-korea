@@ -1,4 +1,5 @@
 import type { SquadPlayer } from "@/lib/squads";
+import { normalizePlayerName } from "@/lib/player-goals";
 
 const POS_LABEL: Record<string, string> = {
   GK: "골키퍼",
@@ -47,9 +48,12 @@ function RefChip({
 export function SquadTable({
   players,
   teamKo,
+  wcGoals,
 }: {
   players: SquadPlayer[];
   teamKo?: string;
+  /** 정규화된 선수 이름 → 이번 월드컵 득점 수 */
+  wcGoals?: Record<string, number>;
 }) {
   const byPos = POS_GROUPS.map((p) => ({
     pos: p,
@@ -79,14 +83,16 @@ export function SquadTable({
                   <th className="py-1.5 pr-2 text-center font-medium tnum">번호</th>
                   <th className="py-1.5 pr-2 font-medium">선수</th>
                   <th className="py-1.5 px-1 text-center font-medium tnum">나이</th>
-                  <th className="hidden py-1.5 px-1 text-center font-medium tnum sm:table-cell">A매치</th>
-                  <th className="hidden py-1.5 px-1 text-center font-medium tnum sm:table-cell">득점</th>
+                  <th className="hidden py-1.5 px-1 text-center font-medium tnum sm:table-cell" title="국가대표 A매치 통산 출전">A매치</th>
+                  <th className="hidden py-1.5 px-1 text-center font-medium tnum sm:table-cell" title="국가대표 A매치 통산 득점">통산 득점</th>
+                  <th className="py-1.5 px-1 text-center font-medium tnum" title="이번 월드컵 득점">2026 월드컵</th>
                   <th className="py-1.5 pl-1 font-medium">소속 클럽</th>
                 </tr>
               </thead>
               <tbody>
                 {grp.list.map((p, i) => {
                   const q = searchName(p.name);
+                  const wc = wcGoals?.[normalizePlayerName(p.name)] ?? 0;
                   return (
                   <tr key={`${p.name}-${i}`} className="border-b align-top transition-colors last:border-0 hover:bg-surface">
                     <td className="py-2 pr-2 text-center tnum text-muted">{p.no ?? "-"}</td>
@@ -118,6 +124,13 @@ export function SquadTable({
                     <td className="px-1 text-center tnum text-muted">{p.age ?? "-"}</td>
                     <td className="hidden px-1 text-center tnum text-muted sm:table-cell">{p.caps ?? "-"}</td>
                     <td className="hidden px-1 text-center tnum text-muted sm:table-cell">{p.goals ?? "-"}</td>
+                    <td className="px-1 text-center tnum">
+                      {wc > 0 ? (
+                        <span className="font-semibold text-accent">{wc}</span>
+                      ) : (
+                        <span className="text-muted">-</span>
+                      )}
+                    </td>
                     <td className="py-2 pl-1">
                       {p.club ? (
                         <a

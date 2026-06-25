@@ -4,6 +4,7 @@ import { getDataset } from "@/lib/data";
 import { getSquad, sortSquad, getSquads } from "@/lib/squads";
 import { computeStandings } from "@/lib/standings";
 import { getTeamByCode, TEAMS, KOREA } from "@/lib/teams";
+import { tournamentGoalsByTeam } from "@/lib/player-goals";
 import { kstStamp } from "@/lib/format";
 import { SectionHeading, SourceFooter, Flag } from "@/components/ui";
 import { StandingsTable } from "@/components/standings-table";
@@ -65,6 +66,7 @@ export default async function TeamDetailPage({
 
   const squad = await getSquad(team.name);
   const squadsMeta = await getSquads();
+  const wcGoals = tournamentGoalsByTeam(teamMatches, team.name);
   const stamp = kstStamp(data.fetchedAt);
 
   return (
@@ -124,7 +126,11 @@ export default async function TeamDetailPage({
           선수 명단
         </SectionHeading>
         {squad ? (
-          <SquadTable players={sortSquad(squad)} teamKo={team.ko} />
+          <SquadTable
+            players={sortSquad(squad)}
+            teamKo={team.ko}
+            wcGoals={Object.fromEntries(wcGoals)}
+          />
         ) : (
           <p className="rounded-lg bg-surface p-4 text-sm text-muted">
             선수 명단 데이터를 준비 중입니다. `npm run sync`로 위키피디아 스쿼드를
@@ -135,7 +141,9 @@ export default async function TeamDetailPage({
           <p className="mt-2 text-xs text-muted">
             선수 이름·소속 클럽을 누르면 구글 검색으로, <span className="font-medium">위키</span>·
             <span className="font-medium">TM</span>(Transfermarkt) 칩으로 위키백과·이적/시장가치
-            정보로 연결됩니다. (A매치·득점·소속은 실데이터)
+            정보로 연결됩니다. <span className="font-medium">A매치·통산 득점</span>은 위키백과 명단
+            발표 기준 국가대표 통산 기록, <span className="font-medium">월드컵</span>은 이번 대회 득점
+            집계입니다.
           </p>
         )}
       </section>
