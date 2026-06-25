@@ -156,13 +156,13 @@ function ThirdRankTable({ rows }: { rows: ThirdRankRow[] }) {
                 <td className="px-1 text-center tnum">{formatGd(r.gd)}</td>
                 <td className="px-1 text-center tnum text-muted">{r.gf}</td>
                 <td className="py-2 pl-1 text-right">
-                  {r.complete ? (
+                  {3 - r.played <= 0 ? (
                     <span className="rounded bg-[var(--color-kor-ink-soft)] px-1.5 py-0.5 text-[10px] font-bold text-[var(--color-kor-ink)]">
                       완료
                     </span>
                   ) : (
                     <span className="rounded bg-[var(--color-kor-blue-soft)] px-1.5 py-0.5 text-[10px] font-bold text-[var(--color-kor-blue)]">
-                      잔여 {r.remaining}
+                      잔여 {3 - r.played}경기
                     </span>
                   )}
                 </td>
@@ -172,8 +172,7 @@ function ThirdRankTable({ rows }: { rows: ThirdRankRow[] }) {
         </tbody>
       </table>
       <p className="mt-2 px-1 text-[11px] leading-relaxed text-muted">
-        12개 조 3위 중 상위 8팀이 32강(와일드카드) 진출 · 굵은 선이 8위 컷.
-        진행 중인 조는 현재 3위 팀 기준이며 경기 후 바뀔 수 있습니다.
+        상위 8팀 진출 · 굵은 선이 8위 컷
       </p>
     </div>
   );
@@ -229,13 +228,8 @@ function SurvivalPanel({ survival }: { survival: KoreaSurvival }) {
 
       {/* 최악(탈락) 시나리오 체크리스트 */}
       <div>
-        <p className="mb-1 text-xs font-bold text-[var(--color-kor-red)]">
-          탈락 위험 체크리스트 · 한국({survival.focusPoints}점·{formatGd(survival.focusGd)}·
-          {survival.focusGf}득점)보다 좋은 3위가 나오면 위험
-        </p>
-        <p className="mb-2 text-[11px] text-muted">
-          확률 = 그 조 최종 3위가 한국을 추월할 가능성. 경기 결과가 확정되면 자동으로 위험 발생/해소로
-          갱신됩니다.
+        <p className="mb-2 text-xs font-bold text-[var(--color-kor-red)]">
+          탈락 위험 체크 · 한국({survival.focusPoints}점·{formatGd(survival.focusGd)})보다 좋은 3위가 나오면 위험
         </p>
         <div className="flex flex-col gap-1.5">
           {danger.map((g) => (
@@ -251,9 +245,8 @@ function SurvivalPanel({ survival }: { survival: KoreaSurvival }) {
       </div>
 
       <p className="text-[11px] leading-relaxed text-muted">
-        12개 조 3위 중 상위 8팀이 32강 진출. 한국은 현재 3위 팀 중 {survival.aboveNow + 1}위(위{" "}
-        {survival.aboveNow}개 조)이며, 8개 조가 한국을 넘어서야 탈락합니다. 타 조 남은{" "}
-        {survival.remainingMatches}경기를 조별 모든 스코어(0~4골) 동일 가정으로 전수 계산했습니다.
+        12개 조 3위 중 상위 8팀 진출 · 한국은 현재 3위 중 {survival.aboveNow + 1}위 · 타 조 남은
+        경기 스코어 전수 계산 기준
       </p>
     </div>
   );

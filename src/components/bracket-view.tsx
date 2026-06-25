@@ -1,10 +1,13 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import type { ReactNode } from "react";
 import type { BMatch, ProjectedBracket } from "@/lib/bracket-types";
-import { teamKo, teamFlagUrl, KOREA } from "@/lib/teams";
+import { teamKo, teamFlagUrl } from "@/lib/teams";
 
-const CARD_H = 52; // 카드 1개 높이(px) — 컬럼 정렬 기준
+const CARD_H = 56; // 매치 카드 높이(px)
+const LABEL_H = 30; // 라운드 라벨 높이(px) — 컬럼/연결선 정렬 기준
+const COL_W = 152; // 컬럼 너비
+const CONN_W = 26; // 연결선 컬럼 너비
 
 function Side({
   name,
@@ -13,26 +16,24 @@ function Side({
   name: string | null;
   state: "pending" | "neutral" | "win" | "lose";
 }) {
-  // 아직 올라오지 않은 자리 — 빈 슬롯
   if (state === "pending") {
     return (
-      <div className="flex h-6 items-center gap-1.5 px-1.5">
-        <span className="inline-block h-3 w-[18px] shrink-0 rounded-[2px] bg-surface" />
-        <span className="h-2 w-10 rounded-full bg-surface" />
+      <div className="flex h-7 items-center gap-2 px-2">
+        <span className="inline-block h-3.5 w-5 shrink-0 rounded-[2px] bg-surface" />
+        <span className="h-2.5 w-12 rounded-full bg-surface" />
       </div>
     );
   }
   const url = name ? teamFlagUrl(name, 40) : null;
-  const isKorea = name === KOREA;
   return (
     <div
-      className={`flex h-6 items-center gap-1.5 px-1.5 transition-colors duration-500 ${
+      className={`flex h-7 items-center gap-2 px-2 ${
         state === "win"
-          ? "bg-success-soft font-semibold"
+          ? "font-semibold text-ink"
           : state === "lose"
-            ? "text-muted/50 line-through decoration-1"
-            : ""
-      } ${isKorea && state !== "lose" ? "text-primary" : ""}`}
+            ? "text-muted/60"
+            : "text-ink"
+      }`}
     >
       {url ? (
         // eslint-disable-next-line @next/next/no-img-element
@@ -40,44 +41,36 @@ function Side({
           src={url}
           alt=""
           aria-hidden
-          className={`h-3 w-[18px] shrink-0 rounded-[2px] object-cover ring-1 ring-black/5 transition-opacity ${
-            state === "lose" ? "opacity-40" : ""
+          className={`h-3.5 w-5 shrink-0 rounded-[2px] object-cover ring-1 ring-black/5 ${
+            state === "lose" ? "opacity-50" : ""
           }`}
         />
       ) : (
-        <span className="inline-block h-3 w-[18px] shrink-0 rounded-[2px] bg-surface" />
+        <span className="inline-block h-3.5 w-5 shrink-0 rounded-[2px] bg-surface" />
       )}
-      <span className="truncate text-[11px] leading-none">
+      <span className="truncate text-xs leading-none">
         {name ? teamKo(name) : ""}
       </span>
+      {state === "win" && (
+        <span className="ml-auto text-[10px] font-bold text-success">✓</span>
+      )}
     </div>
   );
 }
 
-function MatchCard({
-  m,
-  teamsVisible,
-  winnerVisible,
-  justResolved,
-}: {
-  m: BMatch;
-  teamsVisible: boolean;
-  winnerVisible: boolean;
-  justResolved: boolean;
-}) {
-  const sideState = (sideName: string | null): "pending" | "neutral" | "win" | "lose" => {
-    if (!teamsVisible || !sideName) return "pending";
-    if (!winnerVisible) return "neutral";
+function MatchCard({ m }: { m: BMatch }) {
+  const decided = !!(m.winner && m.side1.name && m.side2.name);
+  const sideState = (
+    sideName: string | null,
+  ): "pending" | "neutral" | "win" | "lose" => {
+    if (!sideName) return "pending";
+    if (!decided) return "neutral";
     return m.winner === sideName ? "win" : "lose";
   };
   return (
     <div
       style={{ height: CARD_H }}
-      className={`flex flex-col justify-center overflow-hidden rounded-lg border bg-[var(--color-card)] transition-all duration-500 ${
-        m.hasKorea && teamsVisible
-          ? "border-primary/60 ring-1 ring-primary/25"
-          : ""
-      } ${justResolved ? "animate-[reveal-up_450ms_var(--ease-out-expo)] shadow-[var(--shadow-lift)]" : ""}`}
+      className="flex flex-col justify-center overflow-hidden rounded-lg border bg-[var(--color-card)]"
     >
       <Side name={m.side1.name} state={sideState(m.side1.name)} />
       <div className="h-px bg-[var(--color-border)]" />
@@ -86,134 +79,104 @@ function MatchCard({
   );
 }
 
-const STEP_LABELS = ["32강", "16강", "8강", "준결승", "결승"];
+/** 두 피더 → 다음 라운드 한 경기로 이어지는 ㅓ자 연결선 (SVG) */
+function Connector({
+  targetCount,
+  bodyHeight,
+}: {
+  targetCount: number;
+  bodyHeight: number;
+}) {
+  const midX = CONN_W / 2;
+  const lines: ReactNode[] = [];
+  for (let j = 0; j < targetCount; j++) {
+    const yT = (bodyHeight * (j + 0.5)) / targetCount;
+    const yA = (bodyHeight * (2 * j + 0.5)) / (2 * targetCount);
+    const yB = (bodyHeight * (2 * j + 1.5)) / (2 * targetCount);
+    lines.push(
+      <path
+        key={j}
+        d={`M0 ${yA} H${midX} V${yB} H0 M${midX} ${yT} H${CONN_W}`}
+        fill="none"
+        stroke="var(--color-border)"
+        strokeWidth={1.5}
+      />,
+    );
+  }
+  return (
+    <div style={{ paddingTop: LABEL_H }} className="shrink-0">
+      <svg width={CONN_W} height={bodyHeight} className="block">
+        {lines}
+      </svg>
+    </div>
+  );
+}
+
+const FALLBACK_ROUNDS = 16;
 
 export function BracketView({ bracket }: { bracket: ProjectedBracket }) {
   const rounds = bracket.rounds;
-  const totalSteps = rounds.length; // 5 (결승 승자 공개까지)
-  const [step, setStep] = useState(0);
-  const containerRef = useRef<HTMLDivElement>(null);
-  const colRefs = useRef<(HTMLDivElement | null)[]>([]);
-  const championRef = useRef<HTMLDivElement>(null);
-
-  // 자동 진행
-  useEffect(() => {
-    if (step >= totalSteps) return;
-    const t = setTimeout(() => setStep((s) => s + 1), step === 0 ? 1000 : 900);
-    return () => clearTimeout(t);
-  }, [step, totalSteps]);
-
-  // 진행 중인 라운드로 부드럽게 스크롤
-  useEffect(() => {
-    if (step === 0) return;
-    const target =
-      step >= totalSteps ? championRef.current : colRefs.current[step];
-    target?.scrollIntoView({
-      behavior: "smooth",
-      inline: "center",
-      block: "nearest",
-    });
-  }, [step, totalSteps]);
-
-  const replay = () => setStep(0);
-
-  const bodyHeight = (rounds[0]?.matches.length ?? 16) * CARD_H + 40;
+  const leafCount = rounds[0]?.matches.length ?? FALLBACK_ROUNDS;
+  const bodyHeight = leafCount * CARD_H + (leafCount - 1) * 8; // 카드 + gap
 
   return (
-    <div>
-      {/* 진행 표시 + 다시보기 */}
-      <div className="mb-3 flex items-center justify-between gap-3">
-        <div className="flex items-center gap-1.5 text-xs">
-          {STEP_LABELS.map((lbl, i) => (
-            <span key={lbl} className="flex items-center gap-1.5">
-              <span
-                className={`rounded-full px-2 py-0.5 font-medium transition-colors ${
-                  step > i
-                    ? "bg-success-soft text-success"
-                    : step === i
-                      ? "bg-primary text-[var(--color-on-primary)]"
-                      : "bg-surface text-muted"
-                }`}
-              >
-                {lbl}
-              </span>
-              {i < STEP_LABELS.length - 1 && (
-                <span className="text-muted/40">›</span>
-              )}
-            </span>
-          ))}
-        </div>
-        <button
-          type="button"
-          onClick={replay}
-          className="shrink-0 rounded-full border px-3 py-1 text-xs font-medium text-muted transition-colors hover:text-ink"
-        >
-          ↺ 다시 보기
-        </button>
-      </div>
-
-      <div
-        ref={containerRef}
-        className="overflow-x-auto pb-2 [scrollbar-width:thin]"
-      >
-        <div className="flex min-w-max items-stretch gap-3 sm:gap-4">
-          {rounds.map((round, ri) => {
-            const teamsVisible = ri === 0 || step >= ri;
-            const winnerVisible = step >= ri + 1;
-            return (
+    <div className="overflow-x-auto pb-3 [scrollbar-width:thin]">
+      <div className="flex min-w-max items-start">
+        {rounds.map((round, ri) => (
+          <div key={round.key} className="flex items-start">
+            <div style={{ width: COL_W }} className="shrink-0">
               <div
-                key={round.key}
-                ref={(el) => {
-                  colRefs.current[ri] = el;
-                }}
-                className="flex w-32 shrink-0 flex-col sm:w-36"
+                style={{ height: LABEL_H }}
+                className="flex items-center justify-center text-xs font-semibold text-muted"
               >
-                <h3 className="mb-2 flex items-center justify-center gap-1 text-center text-xs font-semibold">
-                  <span className={step === ri ? "text-primary" : "text-muted"}>
-                    {round.label}
-                  </span>
-                  {step === ri && step < totalSteps && (
-                    <span className="pulse-dot inline-block size-1.5 rounded-full bg-primary" />
-                  )}
-                </h3>
-                <div
-                  style={{ minHeight: bodyHeight }}
-                  className="flex flex-1 flex-col justify-around gap-1.5"
-                >
-                  {round.matches.map((m) => (
-                    <MatchCard
-                      key={m.id}
-                      m={m}
-                      teamsVisible={teamsVisible}
-                      winnerVisible={winnerVisible}
-                      justResolved={winnerVisible && step === ri + 1}
-                    />
-                  ))}
-                </div>
+                {round.label}
               </div>
-            );
-          })}
-
-          {/* 우승 */}
-          <div
-            ref={championRef}
-            className="flex w-28 shrink-0 flex-col sm:w-32"
-          >
-            <h3 className="mb-2 text-center text-xs font-semibold text-muted">
-              우승
-            </h3>
-            <div className="flex flex-1 items-center justify-center">
               <div
-                className={`flex w-full flex-col items-center gap-2 rounded-xl border p-3 text-center transition-all duration-700 ${
-                  step >= totalSteps
-                    ? "animate-[reveal-up_600ms_var(--ease-out-expo)] border-warning/50 bg-gradient-to-b from-warning-soft to-transparent shadow-[var(--shadow-lift)]"
-                    : "border-dashed bg-surface/40"
-                }`}
+                style={{ height: bodyHeight }}
+                className="flex flex-col justify-around"
               >
+                {round.matches.map((m) => (
+                  <MatchCard key={m.id} m={m} />
+                ))}
+              </div>
+            </div>
+            {ri < rounds.length - 1 && (
+              <Connector
+                targetCount={rounds[ri + 1].matches.length}
+                bodyHeight={bodyHeight}
+              />
+            )}
+          </div>
+        ))}
+
+        {/* 결승 → 우승 연결 + 우승 카드 */}
+        <div className="flex items-start">
+          <div style={{ paddingTop: LABEL_H }} className="shrink-0">
+            <svg width={CONN_W} height={bodyHeight} className="block">
+              <path
+                d={`M0 ${bodyHeight / 2} H${CONN_W}`}
+                fill="none"
+                stroke="var(--color-border)"
+                strokeWidth={1.5}
+              />
+            </svg>
+          </div>
+          <div style={{ width: COL_W - 24 }} className="shrink-0">
+            <div
+              style={{ height: LABEL_H }}
+              className="flex items-center justify-center text-xs font-semibold text-warning"
+            >
+              우승
+            </div>
+            <div
+              style={{ height: bodyHeight }}
+              className="flex flex-col justify-center"
+            >
+              <div className="flex flex-col items-center gap-2 rounded-xl border border-warning/50 bg-gradient-to-b from-warning-soft to-transparent p-3 text-center">
                 <span className="text-3xl" aria-hidden>
                   🏆
                 </span>
-                {step >= totalSteps && bracket.champion ? (
+                {bracket.champion ? (
                   <>
                     {teamFlagUrl(bracket.champion, 60) ? (
                       // eslint-disable-next-line @next/next/no-img-element
@@ -224,16 +187,12 @@ export function BracketView({ bracket }: { bracket: ProjectedBracket }) {
                         className="h-6 w-9 rounded-[3px] object-cover ring-1 ring-black/5"
                       />
                     ) : null}
-                    <span
-                      className={`text-sm font-bold ${
-                        bracket.champion === KOREA ? "text-primary" : ""
-                      }`}
-                    >
+                    <span className="text-sm font-bold">
                       {teamKo(bracket.champion)}
                     </span>
                   </>
                 ) : (
-                  <span className="text-xs text-muted">진행 중…</span>
+                  <span className="text-xs text-muted">미정</span>
                 )}
               </div>
             </div>

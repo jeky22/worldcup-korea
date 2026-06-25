@@ -29,7 +29,7 @@ export default async function BracketPage() {
     return <DataError message={(e as Error).message} />;
   }
 
-  const bracket = projectBracket(data.matches, { favor: KOREA });
+  const bracket = projectBracket(data.matches);
   const koBlocks = koreaKnockout(data.matches);
   const koreaDecided = !data.matches.some(
     (m) => (m.team1 === KOREA || m.team2 === KOREA) && !m.score,
@@ -59,19 +59,17 @@ export default async function BracketPage() {
         <KoreaKnockout blocks={koBlocks} decided={koreaDecided} />
       </Reveal>
 
-      {/* 한국 우승 시나리오 대진표 */}
+      {/* 예상 대진표 */}
       <Reveal as="section" delay={40}>
         <SectionHeading
-          aside={<span className="text-xs text-primary">🇰🇷 한국 우승 시나리오</span>}
+          aside={<span className="text-xs text-muted">FIFA 랭킹 기준</span>}
         >
-          대진표 시뮬레이션
+          예상 대진표
         </SectionHeading>
         <BracketView bracket={bracket} />
         <p className="mt-3 text-xs text-muted">
-          32강부터 한 라운드씩 승자가 올라가는 시뮬레이션입니다. 한국이 만나는 경기는
-          모두 한국이 이긴다고 가정한 <span className="font-medium text-primary">우승 시나리오</span>이며,
-          나머지 경기는 FIFA 랭킹이 높은 팀이 올라간다고 봤습니다. 3위 와일드카드 배정은
-          FIFA Annex C(495 조합) 규정을 따릅니다 (실제 예측 아님).
+          32강부터 결승까지 FIFA 랭킹이 높은 팀이 올라간다고 가정한 예상 대진입니다.
+          3위 와일드카드 배정은 FIFA Annex C(495 조합) 규정을 따릅니다 (실제 예측 아님).
         </p>
       </Reveal>
 

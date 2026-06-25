@@ -139,6 +139,28 @@ function formatGd(gd: number) {
   return gd > 0 ? `+${gd}` : String(gd);
 }
 
+function branchVerdict(b: FocusBranch): { label: string; cls: string } | null {
+  const adv = b.advanceRate >= 0.9995;
+  const out = b.outRate >= 0.9995;
+  const third = b.thirdRate >= 0.9995;
+  if (adv)
+    return {
+      label: "32강 직행 확정",
+      cls: "bg-[var(--color-kor-red)] text-white",
+    };
+  if (third)
+    return {
+      label: "조 3위 · 와일드카드 경쟁",
+      cls: "bg-[var(--color-kor-gold)] text-white",
+    };
+  if (out)
+    return {
+      label: "조별리그 탈락",
+      cls: "bg-[var(--color-kor-ink)] text-white",
+    };
+  return null;
+}
+
 function snapshotLine(s: ThirdWildcardSnapshot) {
   return `${s.rank}위 · ${s.points}점 · 득실 ${formatGd(s.gd)} · ${s.gf}득점`;
 }
@@ -159,9 +181,6 @@ function ConditionRow({
 
   return (
     <li className="flex flex-wrap items-center gap-x-2 gap-y-1.5 rounded-lg bg-[var(--color-kor-red-soft)]/40 px-3 py-2 ring-1 ring-[var(--color-kor-red)]/10">
-      <span className="min-w-[2.5rem] text-sm font-bold tabular-nums text-[var(--color-kor-red)]">
-        {pct(c.share, c.share < 0.01 ? 1 : 0)}
-      </span>
       {single ? (
         <>
           <span className="text-xs font-medium">
@@ -184,12 +203,7 @@ function ConditionRow({
           {(["advance", "third", "out"] as Outcome[]).map((o) => {
             const r = c.outcomeRates[o];
             if (!r) return null;
-            return (
-              <span key={o} className="inline-flex items-center gap-1">
-                <OutcomePill outcome={o} />
-                <span className="text-[11px] font-semibold text-muted tnum">{pct(r)}</span>
-              </span>
-            );
+            return <OutcomePill key={o} outcome={o} />;
           })}
         </span>
       ) : onlyThird && primarySnapshot ? (
@@ -446,8 +460,7 @@ export function ScenarioSummary({
         const wdl = b.ownResult[0];
         const isWin = wdl === "W";
         const isDraw = wdl === "D";
-        const rates = [b.advanceRate, b.thirdRate, b.outRate].filter((r) => r > 0);
-        const singleOutcome = rates.length === 1;
+        const verdict = branchVerdict(b);
         return (
           <article
             key={b.ownResult.join()}
@@ -477,38 +490,19 @@ export function ScenarioSummary({
               </span>
               <div className="min-w-0 flex-1">
                 <p className="text-sm font-semibold text-balance">{ownHeadline(focus, b)}</p>
-                {singleOutcome && (
-                  <div className="mt-2">
-                    <OutcomeTiles
-                      advance={b.advanceRate}
-                      third={b.thirdRate}
-                      out={b.outRate}
-                    />
-                  </div>
-                )}
               </div>
-              <span
-                className={`shrink-0 text-2xl font-black tabular-nums ${
-                  isWin
-                    ? "text-[var(--color-kor-red)]"
-                    : isDraw
-                      ? "text-[var(--color-kor-blue)]"
-                      : "text-[var(--color-kor-ink)]"
-                }`}
-              >
-                {pct(b.share, b.share < 0.01 ? 1 : 0)}
-              </span>
+              {verdict ? (
+                <span
+                  className={`shrink-0 rounded-md px-2.5 py-1 text-xs font-bold ${verdict.cls}`}
+                >
+                  {verdict.label}
+                </span>
+              ) : (
+                <span className="shrink-0 text-[11px] font-semibold text-muted">
+                  결과별 분기 ↓
+                </span>
+              )}
             </div>
-
-            {!singleOutcome && (
-              <div className="px-3.5 py-3">
-                <OutcomeTiles
-                  advance={b.advanceRate}
-                  third={b.thirdRate}
-                  out={b.outRate}
-                />
-              </div>
-            )}
 
             {b.verdict === "depends" && b.conditions.length > 0 && (
               <ul className="flex flex-col gap-1.5 border-t border-[var(--color-kor-red)]/10 px-3.5 py-3">

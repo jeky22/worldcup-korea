@@ -270,8 +270,14 @@ body {
 
 .hero-media {
   position: relative;
-  aspect-ratio: 16 / 9;
+  aspect-ratio: 4 / 5;
   background: oklch(0.06 0.015 355);
+}
+
+@media (min-width: 640px) {
+  .hero-media {
+    aspect-ratio: 16 / 9;
+  }
 }
 
 .hero-bg-video {
