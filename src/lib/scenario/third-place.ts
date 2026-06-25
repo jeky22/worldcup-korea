@@ -55,3 +55,33 @@ export function thirdPlaceTable(matches: Match[]): ThirdPlaceRow[] {
     groupComplete: t.groupComplete,
   }));
 }
+
+export interface FocusThirdPlaceWildcard {
+  row: ThirdPlaceRow;
+  comparisonTable: ThirdPlaceRow[];
+  snapshotOnly: boolean;
+  incompleteGroups: number;
+}
+
+/** 포커스 팀이 조 3위일 때 12개 조 3위 와일드카드 순위 */
+export function focusThirdPlaceWildcard(
+  matches: Match[],
+  group: GroupId,
+  focus: string,
+): FocusThirdPlaceWildcard | null {
+  const st = computeStandings(matches, group);
+  if (st.find((r) => r.team === focus)?.rank !== 3) return null;
+
+  const comparisonTable = thirdPlaceTable(matches);
+  const row = comparisonTable.find((r) => r.group === group);
+  if (!row) return null;
+
+  const incompleteGroups = comparisonTable.filter(
+    (r) => !r.groupComplete && r.group !== group,
+  ).length;
+  const snapshotOnly = GROUP_IDS.some((g) =>
+    matches.some((m) => m.group === g && !m.score),
+  );
+
+  return { row, comparisonTable, snapshotOnly, incompleteGroups };
+}

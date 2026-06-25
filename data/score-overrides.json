@@ -1,0 +1,25 @@
+{
+  "note": "openfootball 저장소 반영 전 최신 스코어. npm run sync 후에도 적용됩니다.",
+  "matches": [
+    {
+      "team1": "South Africa",
+      "team2": "South Korea",
+      "date": "2026-06-24",
+      "score": [1, 0],
+      "goals1": [{ "name": "Thapelo Maseko", "minute": "63" }],
+      "goals2": []
+    },
+    {
+      "team1": "Czech Republic",
+      "team2": "Mexico",
+      "date": "2026-06-24",
+      "score": [0, 3],
+      "goals1": [],
+      "goals2": [
+        { "name": "Mateo Chávez", "minute": "55" },
+        { "name": "Julián Quiñones", "minute": "61" },
+        { "name": "Álvaro Fidalgo", "minute": "90+4" }
+      ]
+    }
+  ]
+}

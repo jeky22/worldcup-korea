@@ -3,6 +3,7 @@ import { getDataset } from "@/lib/data";
 import { getHighlightVideos, getNews } from "@/lib/feeds";
 import { computeStandings } from "@/lib/standings";
 import { analyzeGroup, focusBranches, analyzeThirdFollowUp } from "@/lib/scenario/engine";
+import { focusThirdPlaceWildcard } from "@/lib/scenario/third-place";
 import { koreaKnockout } from "@/lib/bracket";
 import { KOREA, teamKo, getTeam } from "@/lib/teams";
 import { kstDate, kstStamp } from "@/lib/format";
@@ -59,6 +60,7 @@ export default async function HomePage() {
   const scenario = analyzeGroup(matches, koreaGroup);
   const branches = focusBranches(matches, koreaGroup, KOREA);
   const thirdFollowUp = analyzeThirdFollowUp(matches, koreaGroup, KOREA, "L");
+  const thirdPlaceWildcard = focusThirdPlaceWildcard(matches, koreaGroup, KOREA);
   const koreaScenario = scenario.teams.find((t) => t.team === KOREA)!;
   const koBlocks = koreaKnockout(matches);
   const koreaAlive = scenario.remaining.length > 0;
@@ -160,12 +162,15 @@ export default async function HomePage() {
             branches={branches}
             totalCombos={scenario.totalCombos}
             thirdFollowUp={thirdFollowUp}
+            thirdPlaceWildcard={thirdPlaceWildcard}
             focusGroup={koreaGroup}
           />
           <p className="mt-3 text-xs text-muted">
-            {scenario.exact
-              ? `남은 ${scenario.remaining.length}경기, 모든 스코어 조합 ${scenario.totalCombos.toLocaleString()}가지를 FIFA 규정 기준으로 계산`
-              : `남은 ${scenario.remaining.length}경기 근사 계산(${scenario.totalCombos.toLocaleString()}조합)`}
+            {scenario.remaining.length === 0
+              ? `${koreaGroup}조 조별리그 종료 · 12개 조 3위 순위(승점→득실→득점) 기준`
+              : scenario.exact
+                ? `남은 ${scenario.remaining.length}경기, 모든 스코어 조합 ${scenario.totalCombos.toLocaleString()}가지를 FIFA 규정 기준으로 계산`
+                : `남은 ${scenario.remaining.length}경기 근사 계산(${scenario.totalCombos.toLocaleString()}조합)`}
           </p>
         </div>
       </Reveal>

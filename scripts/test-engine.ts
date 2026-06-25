@@ -49,7 +49,7 @@ async function main() {
     console.log(
       `조 3위 ${(tf.rank3Share * 100).toFixed(0)}% · 4위 ${(tf.rank4Share * 100).toFixed(0)}% (패 분기)`,
     );
-    console.log(`와일드카드 진출 ${(tf.wildcardRate * 100).toFixed(0)}% (3위일 때)`);
+    console.log(`와일드카드 진출 ${(tf.wildcardRate * 100).toFixed(0)}% (3위일 때, snapshotOnly=${tf.snapshotOnly}, incomplete=${tf.incompleteGroups})`);
     for (const s of tf.snapshots) {
       console.log(
         `  ${(s.share * 100).toFixed(0)}% · ${s.rank}위 ${s.points}점 GD ${s.gd} ${s.qualifies ? "✓" : "✗"}`,

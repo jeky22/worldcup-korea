@@ -1,5 +1,5 @@
 import type { GroupId, Match, StandingRow } from "../types";
-import { teamsInGroup } from "../teams";
+import { teamsInGroup, GROUP_IDS } from "../teams";
 import { rankTeams, resultsFromMatches, type Result } from "../standings";
 import { thirdPlaceTable, type ThirdPlaceRow } from "./third-place";
 
@@ -654,8 +654,15 @@ export interface ThirdFollowUp {
   rank3Share: number;
   /** 패 분기 내 조 4위(탈락) 비율 */
   rank4Share: number;
-  /** 3위일 때 와일드카드(8위권) 진출 비율 */
+  /**
+   * 3위일 때 와일드카드(8위권) 진출 비율.
+   * 타 조에 미완료 경기가 있으면 '현재 스냅샷' 기준이며 최종 확률이 아님.
+   */
   wildcardRate: number;
+  /** true면 타 조 경기 미완료 — 순위·진출권은 변동 가능 */
+  snapshotOnly: boolean;
+  /** 비교표 기준 경기가 남은 타 조 수 (포커스 조 제외) */
+  incompleteGroups: number;
   /** 3위일 때 승점·득실 조합별 와일드카드 순위 (share 내림차순) */
   snapshots: ThirdWildcardSnapshot[];
   /** 대표 3위 시나리오의 12개 조 3위 순위표 */
@@ -774,11 +781,19 @@ export function analyzeThirdFollowUp(
 
   const primaryMerged = snapshotCounts.get(primaryKey)?.merged ?? matches;
   const comparisonTable = thirdCount ? thirdPlaceTable(primaryMerged) : [];
+  const incompleteGroups = comparisonTable.filter(
+    (r) => !r.groupComplete && r.group !== group,
+  ).length;
+  const snapshotOnly = GROUP_IDS.some((g) =>
+    matches.some((m) => m.group === g && !m.score),
+  );
 
   return {
     rank3Share: thirdCount / branchCount,
     rank4Share: rank4Count / branchCount,
     wildcardRate: thirdCount ? wcCount / thirdCount : 0,
+    snapshotOnly,
+    incompleteGroups,
     snapshots,
     comparisonTable,
   };

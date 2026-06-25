@@ -2,6 +2,7 @@ import { promises as fs } from "node:fs";
 import path from "node:path";
 import * as cheerio from "cheerio";
 import { normalize, OPENFOOTBALL_URL, type RawData } from "../src/lib/normalize";
+import { applyScoreOverrides, loadScoreOverrides } from "../src/lib/score-overrides";
 import { TEAMS } from "../src/lib/teams";
 
 const CACHE_DIR = path.join(process.cwd(), "data", "cache");
@@ -66,10 +67,11 @@ async function syncMatches() {
   const res = await fetch(OPENFOOTBALL_URL);
   if (!res.ok) throw new Error(`openfootball ${res.status}`);
   const raw = (await res.json()) as RawData;
+  const overrides = await loadScoreOverrides();
   const dataset = {
-    matches: normalize(raw),
+    matches: applyScoreOverrides(normalize(raw), overrides),
     fetchedAt: new Date().toISOString(),
-    source: "openfootball",
+    source: overrides.length ? "openfootball+override" : "openfootball",
   };
   await fs.writeFile(
     path.join(CACHE_DIR, "worldcup.json"),
@@ -77,6 +79,9 @@ async function syncMatches() {
     "utf8",
   );
   console.log(`✓ matches: ${dataset.matches.length}`);
+  if (overrides.length) {
+    console.log(`  score overrides: ${overrides.length}경기`);
+  }
 }
 
 async function syncSquads() {

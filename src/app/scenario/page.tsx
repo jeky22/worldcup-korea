@@ -2,7 +2,7 @@ import Link from "next/link";
 import { getDataset } from "@/lib/data";
 import { computeStandings } from "@/lib/standings";
 import { analyzeGroup, focusBranches, analyzeThirdFollowUp } from "@/lib/scenario/engine";
-import { thirdPlaceTable } from "@/lib/scenario/third-place";
+import { thirdPlaceTable, focusThirdPlaceWildcard } from "@/lib/scenario/third-place";
 import { koreaKnockout } from "@/lib/bracket";
 import { GROUP_IDS, KOREA, getTeam, teamsInGroup, teamKo } from "@/lib/teams";
 import { kstStamp } from "@/lib/format";
@@ -74,6 +74,7 @@ export default async function ScenarioPage({
   const scenario = analyzeGroup(data.matches, group);
   const branches = focusBranches(data.matches, group, focus);
   const thirdFollowUp = analyzeThirdFollowUp(data.matches, group, focus, "L");
+  const thirdPlaceWildcard = focusThirdPlaceWildcard(data.matches, group, focus);
   const thirds = thirdPlaceTable(data.matches);
   const stamp = kstStamp(data.fetchedAt);
   const isKoreaGroup = group === getTeam(KOREA)!.group;
@@ -186,6 +187,7 @@ export default async function ScenarioPage({
             branches={branches}
             totalCombos={scenario.totalCombos}
             thirdFollowUp={thirdFollowUp}
+            thirdPlaceWildcard={thirdPlaceWildcard}
             focusGroup={group}
           />
         </section>

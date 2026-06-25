@@ -3,6 +3,7 @@ import { promises as fs } from "node:fs";
 import path from "node:path";
 import type { Dataset, GroupId, Match } from "./types";
 import { normalize, OPENFOOTBALL_URL, type RawData } from "./normalize";
+import { applyScoreOverrides, loadScoreOverrides } from "./score-overrides";
 
 const CACHE_FILE = path.join(process.cwd(), "data", "cache", "worldcup.json");
 
@@ -20,6 +21,7 @@ async function readCache(): Promise<Dataset | null> {
  * Never returns fabricated data — throws if no real source is available.
  */
 export async function getDataset(): Promise<Dataset> {
+  const overrides = await loadScoreOverrides();
   try {
     const res = await fetch(OPENFOOTBALL_URL, {
       next: { revalidate: 3600, tags: ["worldcup"] },
@@ -27,13 +29,19 @@ export async function getDataset(): Promise<Dataset> {
     if (!res.ok) throw new Error(`openfootball ${res.status}`);
     const raw = (await res.json()) as RawData;
     return {
-      matches: normalize(raw),
+      matches: applyScoreOverrides(normalize(raw), overrides),
       fetchedAt: new Date().toISOString(),
-      source: "openfootball",
+      source: overrides.length ? "openfootball+override" : "openfootball",
     };
   } catch (err) {
     const cached = await readCache();
-    if (cached) return cached;
+    if (cached) {
+      return {
+        ...cached,
+        matches: applyScoreOverrides(cached.matches, overrides),
+        source: overrides.length ? `${cached.source}+override` : cached.source,
+      };
+    }
     throw new Error(
       `실데이터 로드 실패: openfootball 접근 불가, 캐시 없음 (${(err as Error).message})`,
     );
