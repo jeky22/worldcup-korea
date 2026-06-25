@@ -1,6 +1,6 @@
 import { normalize, OPENFOOTBALL_URL, type RawData } from "../src/lib/normalize";
 import { computeStandings } from "../src/lib/standings";
-import { analyzeGroup, focusBranches } from "../src/lib/scenario/engine";
+import { analyzeGroup, focusBranches, analyzeThirdFollowUp } from "../src/lib/scenario/engine";
 import { thirdPlaceTable } from "../src/lib/scenario/third-place";
 import { teamKo, KOREA } from "../src/lib/teams";
 
@@ -41,6 +41,20 @@ async function main() {
     console.log(
       `${String(r.rank).padStart(2)}. [${r.group}] ${teamKo(r.team).padEnd(12)} ${r.played}경기 ${r.points}점 GD ${r.gd} ${r.qualifies ? "✓진출" : "✗"}`,
     );
+  }
+
+  const tf = analyzeThirdFollowUp(matches, "A", KOREA, "L");
+  if (tf) {
+    console.log("\n=== 패 → 3위 와일드카드 순위 ===");
+    console.log(
+      `조 3위 ${(tf.rank3Share * 100).toFixed(0)}% · 4위 ${(tf.rank4Share * 100).toFixed(0)}% (패 분기)`,
+    );
+    console.log(`와일드카드 진출 ${(tf.wildcardRate * 100).toFixed(0)}% (3위일 때)`);
+    for (const s of tf.snapshots) {
+      console.log(
+        `  ${(s.share * 100).toFixed(0)}% · ${s.rank}위 ${s.points}점 GD ${s.gd} ${s.qualifies ? "✓" : "✗"}`,
+      );
+    }
   }
 }
 

@@ -15,7 +15,7 @@ import {
 import { computeStandings } from "./standings";
 import { thirdPlaceTable } from "./scenario/third-place";
 import { fifaRank, GROUP_IDS, KOREA, getTeam } from "./teams";
-import { focusFinishingRanks } from "./scenario/engine";
+import { focusFinishingRanks, focusThirdWildcardRate, focusVerbStats, groupRankDistribution, analyzeThirdFollowUp } from "./scenario/engine";
 
 export type {
   BMatch,
@@ -259,8 +259,8 @@ export function projectBracket(
 
 const VERB_KO: Record<WDL, string> = { W: "이기면", D: "비기면", L: "지면" };
 
-function cand(name: string): OppCandidate {
-  return { name, fifaRank: fifaRank(name) };
+function cand(name: string, share = 1): OppCandidate {
+  return { name, fifaRank: fifaRank(name), share };
 }
 
 function findSlot(
@@ -276,27 +276,36 @@ function findSlot(
 
 function resolveOppLabel(
   oppLabel: string,
-  pos: Record<GroupId, GroupPos>,
-): { label: string; candidates: OppCandidate[]; fixed: boolean } {
+  matches: Match[],
+): { label: string; candidates: OppCandidate[]; fixed: boolean; sourceGroup?: GroupId } {
   const gs = oppLabel.match(GROUP_SLOT);
   if (gs) {
     const p = gs[1];
     const g = gs[2] as GroupId;
-    const team = p === "1" ? pos[g].first : pos[g].second;
+    const rank = p === "1" ? 1 : 2;
+    const dist = groupRankDistribution(matches, g);
+    const rankMap = dist.byRank.get(rank)!;
+    const candidates = [...rankMap.entries()]
+      .map(([name, count]) => cand(name, count / dist.total))
+      .sort((a, b) => b.share - a.share);
+    const top = candidates[0];
+    const fixed =
+      candidates.length === 1 ||
+      (top != null && top.share >= 0.999);
     return {
       label: `${g}조 ${p === "1" ? "1위" : "2위"}`,
-      candidates: team ? [cand(team)] : [],
-      fixed: true,
+      candidates,
+      fixed,
+      sourceGroup: g,
     };
   }
   return { label: oppLabel, candidates: [], fixed: false };
 }
 
-/** Annex C로 특정 조 3위의 32강 상대 확정 */
+/** Annex C로 특정 조 3위의 32강 상대 (현재 3위 진출 조 기준) */
 function thirdPlaceMatchInfo(
   matches: Match[],
   group: GroupId,
-  pos: Record<GroupId, GroupPos>,
   qualifyingGroups: GroupId[],
 ): KoMatchInfo | null {
   const matchNum = annexCMatchForGroup(qualifyingGroups, group);
@@ -304,10 +313,9 @@ function thirdPlaceMatchInfo(
   const m = matchByNum(matches, matchNum);
   if (!m) return null;
 
-  // 3위는 away(2번) 슬롯, 1위 조가 home(1번)
   const oppLabel =
     m.team1Label?.match(GROUP_SLOT) ? m.team1Label : m.team2Label ?? "";
-  const r = resolveOppLabel(oppLabel, pos);
+  const r = resolveOppLabel(oppLabel, matches);
   return {
     stageLabel: "32강",
     date: m.date,
@@ -315,26 +323,29 @@ function thirdPlaceMatchInfo(
     ground: m.ground,
     opponentLabel: r.label,
     candidates: r.candidates,
-    fixed: true,
+    fixed: r.fixed,
+    sourceGroup: r.sourceGroup,
   };
 }
 
 export function koreaKnockout(matches: Match[]): KoVerbBlock[] {
   const group = getTeam(KOREA)!.group;
-  const pos = groupPositions(matches);
   const tpt = thirdPlaceTable(matches);
   const qualifyingGroups = tpt.filter((r) => r.qualifies).map((r) => r.group);
   const koreaThirdQualifies = tpt.some(
     (r) => r.group === group && r.qualifies,
   );
 
+  const verbStats = focusVerbStats(matches, group, KOREA);
   const ranksByVerb = focusFinishingRanks(matches, group, KOREA);
+  const thirdWildcardRate = focusThirdWildcardRate(matches, group, KOREA);
+  const thirdFollowUpL = analyzeThirdFollowUp(matches, group, KOREA, "L");
   const slot1 = findSlot(matches, `1${group}`);
   const slot2 = findSlot(matches, `2${group}`);
 
   const infoFor = (rank: number): KoMatchInfo | null => {
     if (rank === 1 && slot1) {
-      const r = resolveOppLabel(slot1.oppLabel, pos);
+      const r = resolveOppLabel(slot1.oppLabel, matches);
       return {
         stageLabel: "32강",
         date: slot1.match.date,
@@ -343,10 +354,11 @@ export function koreaKnockout(matches: Match[]): KoVerbBlock[] {
         opponentLabel: r.label,
         candidates: r.candidates,
         fixed: r.fixed,
+        sourceGroup: r.sourceGroup,
       };
     }
     if (rank === 2 && slot2) {
-      const r = resolveOppLabel(slot2.oppLabel, pos);
+      const r = resolveOppLabel(slot2.oppLabel, matches);
       return {
         stageLabel: "32강",
         date: slot2.match.date,
@@ -355,30 +367,60 @@ export function koreaKnockout(matches: Match[]): KoVerbBlock[] {
         opponentLabel: r.label,
         candidates: r.candidates,
         fixed: r.fixed,
+        sourceGroup: r.sourceGroup,
       };
     }
     if (rank === 3) {
-      if (!koreaThirdQualifies) return null;
-      return thirdPlaceMatchInfo(matches, group, pos, qualifyingGroups);
+      if (!koreaThirdQualifies && thirdWildcardRate == null && !thirdFollowUpL) return null;
+      return thirdPlaceMatchInfo(matches, group, qualifyingGroups);
     }
     return null;
   };
 
   const verbs: WDL[] = ["W", "D", "L"];
   return verbs.map((verb) => {
+    const stat = verbStats?.verbs[verb];
+    const rankShares = new Map(
+      stat?.ranks.map((r) => [r.rank, r]) ?? [],
+    );
     const ranks = ranksByVerb[verb];
-    const steps: KoRankStep[] = ranks.map((rank) => ({
-      rank,
-      result:
-        rank <= 2
-          ? "직행"
-          : rank === 3
-            ? koreaThirdQualifies
-              ? "와일드카드"
-              : "탈락"
-            : "탈락",
-      match: rank <= 2 || (rank === 3 && koreaThirdQualifies) ? infoFor(rank) : null,
-    }));
-    return { verb, verbKo: VERB_KO[verb], ranks: steps };
+    const steps: KoRankStep[] = ranks.map((rank) => {
+      const rs = rankShares.get(rank);
+      const isThird = rank === 3;
+      const wcRate =
+        isThird && verb === "L" && thirdFollowUpL
+          ? thirdFollowUpL.wildcardRate
+          : isThird
+            ? (thirdWildcardRate ?? undefined)
+            : undefined;
+      const showMatch =
+        rank <= 2 ||
+        (isThird &&
+          (koreaThirdQualifies ||
+            (wcRate ?? 0) > 0 ||
+            thirdWildcardRate != null));
+      return {
+        rank,
+        share: rs?.share ?? 0,
+        comboCount: rs?.comboCount ?? 0,
+        result:
+          rank <= 2
+            ? "직행"
+            : isThird
+              ? (wcRate ?? 0) > 0 || koreaThirdQualifies
+                ? "와일드카드"
+                : "탈락"
+              : "탈락",
+        match: showMatch ? infoFor(rank) : null,
+        wildcardRate: wcRate,
+      };
+    });
+    return {
+      verb,
+      verbKo: VERB_KO[verb],
+      share: stat?.share ?? 0,
+      comboCount: stat?.comboCount ?? 0,
+      ranks: steps,
+    };
   });
 }

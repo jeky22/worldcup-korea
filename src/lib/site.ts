@@ -44,3 +44,6 @@ export function isIndexable(): boolean {
   if (process.env.NEXT_PUBLIC_NOINDEX === "1") return false;
   return true;
 }
+
+/** 히어로 배경 영상 (public/hero/hero-bg.mp4) */
+export const HERO_VIDEO = "/hero/hero-bg.mp4";

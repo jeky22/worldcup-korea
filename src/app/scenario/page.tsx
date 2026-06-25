@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { getDataset } from "@/lib/data";
 import { computeStandings } from "@/lib/standings";
-import { analyzeGroup, focusBranches } from "@/lib/scenario/engine";
+import { analyzeGroup, focusBranches, analyzeThirdFollowUp } from "@/lib/scenario/engine";
 import { thirdPlaceTable } from "@/lib/scenario/third-place";
 import { koreaKnockout } from "@/lib/bracket";
 import { GROUP_IDS, KOREA, getTeam, teamsInGroup, teamKo } from "@/lib/teams";
@@ -73,6 +73,7 @@ export default async function ScenarioPage({
   const standings = computeStandings(data.matches, group);
   const scenario = analyzeGroup(data.matches, group);
   const branches = focusBranches(data.matches, group, focus);
+  const thirdFollowUp = analyzeThirdFollowUp(data.matches, group, focus, "L");
   const thirds = thirdPlaceTable(data.matches);
   const stamp = kstStamp(data.fetchedAt);
   const isKoreaGroup = group === getTeam(KOREA)!.group;
@@ -131,7 +132,7 @@ export default async function ScenarioPage({
           >
             🇰🇷 한국 32강 상대 시뮬레이션
           </SectionHeading>
-          <KoreaKnockout blocks={koBlocks} />
+          <KoreaKnockout blocks={koBlocks} totalCombos={scenario.totalCombos} />
         </section>
       )}
 
@@ -180,7 +181,13 @@ export default async function ScenarioPage({
           <div className="mb-3 flex items-center gap-2 text-sm">
             <TeamLabel name={focus} bold /> 기준
           </div>
-          <ScenarioSummary focus={focus} branches={branches} />
+          <ScenarioSummary
+            focus={focus}
+            branches={branches}
+            totalCombos={scenario.totalCombos}
+            thirdFollowUp={thirdFollowUp}
+            focusGroup={group}
+          />
         </section>
       )}
 

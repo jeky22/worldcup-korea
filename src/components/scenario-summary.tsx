@@ -1,115 +1,310 @@
-import type { FocusBranch, FocusCondition, Outcome, WDL } from "@/lib/scenario/engine";
+import type {
+  FocusBranch,
+  FocusCondition,
+  Outcome,
+  ThirdFollowUp,
+  ThirdWildcardSnapshot,
+  WDL,
+} from "@/lib/scenario/engine";
+import type { GroupId } from "@/lib/types";
 import { teamKo } from "@/lib/teams";
 import { withJosa } from "@/lib/format";
 import { OutcomePill } from "./ui";
+import { ThirdPlaceTable } from "./third-place-table";
 
 const WDL_CHAR: Record<WDL, string> = { W: "승", D: "무", L: "패" };
 const WDL_VERB: Record<WDL, string> = { W: "이기면", D: "비기면", L: "지면" };
 const WDL_BADGE: Record<WDL, string> = {
-  W: "bg-success-soft text-success",
-  D: "bg-surface text-ink",
-  L: "bg-danger-soft text-danger",
+  W: "bg-[var(--color-kor-red)] text-white shadow-[0_2px_8px_oklch(0.48_0.21_355/0.35)]",
+  D: "bg-[var(--color-kor-blue)] text-white shadow-[0_2px_8px_oklch(0.42_0.16_250/0.3)]",
+  L: "bg-[var(--color-kor-ink)] text-white",
 };
 
-/** "대한민국이 남아프리카공화국과의 경기에서 이기면" */
-function ownPhrase(focus: string, branch: FocusBranch): string {
+const OUTCOME_TILE = {
+  advance: {
+    label: "32강",
+    bg: "bg-[var(--color-kor-red-soft)]",
+    border: "border-[var(--color-kor-red)]/30",
+    text: "text-[var(--color-kor-red)]",
+  },
+  third: {
+    label: "3위",
+    bg: "bg-[var(--color-kor-gold-soft)]",
+    border: "border-[var(--color-kor-gold)]/35",
+    text: "text-[var(--color-kor-gold)]",
+  },
+  out: {
+    label: "탈락",
+    bg: "bg-[var(--color-kor-ink-soft)]",
+    border: "border-[var(--color-kor-ink)]/25",
+    text: "text-[var(--color-kor-ink)]",
+  },
+} as const;
+
+function pct(rate: number, digits = 0) {
+  return `${(rate * 100).toFixed(digits)}%`;
+}
+
+function ownHeadline(focus: string, branch: FocusBranch): string {
   const focusKo = teamKo(focus);
   if (branch.ownMatches.length === 1 && branch.ownResult.length === 1) {
     const m = branch.ownMatches[0];
     const oppName = m.team1 === focus ? m.team2 : m.team1;
-    const oppKo = teamKo(oppName);
-    return `${withJosa(focusKo, "이가")} ${withJosa(oppKo, "와과")}의 경기에서 ${WDL_VERB[branch.ownResult[0]]}`;
+    return `${withJosa(focusKo, "이가")} ${withJosa(teamKo(oppName), "와과")} ${WDL_VERB[branch.ownResult[0]]}`;
   }
   const seq = branch.ownResult.map((w) => WDL_CHAR[w]).join("·");
-  return `${withJosa(focusKo, "이가")} 남은 경기를 ${seq}로 마치면`;
+  return `${withJosa(focusKo, "이가")} 남은 경기 ${seq}`;
 }
 
-/** 한 경기 결과를 동사구로: "멕시코가 이기" / "비기" */
-function matchResultVerb(team1: string, team2: string, result: WDL): string {
-  if (result === "D") return "비기";
-  const winner = result === "W" ? team1 : team2;
-  return `${withJosa(teamKo(winner), "이가")} 이기`;
-}
-
-const RESULT_ORDER: Record<WDL, number> = { W: 0, D: 1, L: 2 };
-
-/**
- * 같은 결과(outcome)로 이어지는 '다른 경기' 조건들을 자연어로 묶는다.
- * 다른 경기가 1개일 때: "체코 vs 멕시코에서 비기거나 멕시코가 이기면"
- */
-function describeConditions(conds: FocusCondition[]): {
-  text: string;
-  outcome: Outcome[];
-}[] {
-  // outcome 별로 묶기
-  const byOutcome = new Map<string, FocusCondition[]>();
-  for (const c of conds) {
-    const key = c.outcome.join("+");
-    const arr = byOutcome.get(key) ?? [];
-    arr.push(c);
-    byOutcome.set(key, arr);
-  }
-
-  const out: { text: string; outcome: Outcome[] }[] = [];
-  for (const [key, list] of byOutcome) {
-    const outcome = key.split("+") as Outcome[];
-    const sample = list[0];
-    if (sample.parts.length === 1) {
-      // 다른 경기 1개: 결과들을 모아서 한 문장
-      const ref = sample.parts[0];
-      const results = list
-        .map((c) => c.parts[0].result)
-        .sort((a, b) => RESULT_ORDER[a] - RESULT_ORDER[b]);
-      const verbs = results.map((r) =>
-        matchResultVerb(ref.team1, ref.team2, r),
-      );
-      const joined =
-        verbs.length === 3
-          ? "결과와 무관하게"
-          : verbs.join("거나") + "면";
-      const prefix =
-        verbs.length === 3
-          ? ""
-          : `${teamKo(ref.team1)} vs ${teamKo(ref.team2)}에서 `;
-      out.push({ text: `${prefix}${joined}`, outcome });
-    } else {
-      // 다른 경기 여러 개: 조합별 나열
-      const lines = list.map((c) =>
-        c.parts
-          .map(
-            (p) =>
-              `${teamKo(p.team1)} vs ${teamKo(p.team2)} ${matchResultVerb(p.team1, p.team2, p.result)}고`,
-          )
-          .join(", ")
-          .replace(/고$/, "면"),
-      );
-      out.push({ text: lines.join(" / "), outcome });
-    }
-  }
-  // 진출 → 3위 → 탈락 순
-  const ow = (o: Outcome[]) =>
-    o.includes("advance") ? 0 : o.includes("third") ? 1 : 2;
-  out.sort((a, b) => ow(a.outcome) - ow(b.outcome));
-  return out;
-}
-
-function branchVerdictPill(b: FocusBranch) {
-  if (b.verdict === "advance") return <OutcomePill outcome="advance" />;
-  if (b.verdict === "advance-or-third")
-    return <OutcomePill outcome="advance-or-third" />;
-  if (b.verdict === "third") return <OutcomePill outcome="third" />;
-  if (b.verdict === "out") return <OutcomePill outcome="out" />;
+function resultChip(team1: string, team2: string, result: WDL) {
+  const label =
+    result === "D"
+      ? "무"
+      : result === "W"
+        ? `${teamKo(team1)} 승`
+        : `${teamKo(team2)} 승`;
   return (
-    <span className="text-sm font-medium text-warning">다른 경기에 따라 갈림</span>
+    <span
+      className={`rounded px-1.5 py-0.5 text-[11px] font-bold ${
+        result === "W"
+          ? "bg-[var(--color-kor-red-soft)] text-[var(--color-kor-red)]"
+          : result === "L"
+            ? "bg-[var(--color-kor-ink-soft)] text-[var(--color-kor-ink)]"
+            : "bg-[var(--color-kor-blue-soft)] text-[var(--color-kor-blue)]"
+      }`}
+    >
+      {label}
+    </span>
+  );
+}
+
+function OutcomeTiles({
+  advance,
+  third,
+  out,
+}: {
+  advance: number;
+  third: number;
+  out: number;
+}) {
+  const items = (
+    [
+      { key: "advance" as const, rate: advance },
+      { key: "third" as const, rate: third },
+      { key: "out" as const, rate: out },
+    ] as const
+  ).filter((i) => i.rate > 0);
+
+  if (items.length === 0) return null;
+
+  if (items.length === 1) {
+    const t = OUTCOME_TILE[items[0].key];
+    return (
+      <span
+        className={`inline-flex items-center gap-2 rounded-lg border px-3 py-1.5 ${t.bg} ${t.border}`}
+      >
+        <span className={`text-xs font-bold ${t.text}`}>{t.label}</span>
+        <span className={`text-lg font-black tabular-nums ${t.text}`}>
+          {pct(items[0].rate, items[0].rate < 0.01 ? 1 : 0)}
+        </span>
+      </span>
+    );
+  }
+
+  return (
+    <div
+      className={`grid gap-2 ${items.length === 3 ? "grid-cols-3" : "grid-cols-2"}`}
+    >
+      {items.map(({ key, rate }) => {
+        const t = OUTCOME_TILE[key];
+        return (
+          <div
+            key={key}
+            className={`flex flex-col items-center rounded-lg border px-2 py-2 ${t.bg} ${t.border}`}
+          >
+            <span className={`text-[11px] font-bold ${t.text}`}>{t.label}</span>
+            <span className={`text-xl font-black tabular-nums leading-tight ${t.text}`}>
+              {pct(rate, rate < 0.01 ? 1 : 0)}
+            </span>
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
+function formatGd(gd: number) {
+  return gd > 0 ? `+${gd}` : String(gd);
+}
+
+function snapshotLine(s: ThirdWildcardSnapshot) {
+  return `${s.rank}위 · ${s.points}점 · 득실 ${formatGd(s.gd)} · ${s.gf}득점`;
+}
+
+function ConditionRow({
+  c,
+  primarySnapshot,
+}: {
+  c: FocusCondition;
+  primarySnapshot?: ThirdWildcardSnapshot;
+}) {
+  const single = c.parts.length === 1;
+  const multiOutcome = c.outcome.length > 1;
+  const onlyThird = c.outcome.length === 1 && c.outcome[0] === "third";
+  const onlyOut = c.outcome.length === 1 && c.outcome[0] === "out";
+
+  return (
+    <li className="flex flex-wrap items-center gap-x-2 gap-y-1.5 rounded-lg bg-[var(--color-kor-red-soft)]/40 px-3 py-2 ring-1 ring-[var(--color-kor-red)]/10">
+      <span className="min-w-[2.5rem] text-sm font-bold tabular-nums text-[var(--color-kor-red)]">
+        {pct(c.share, c.share < 0.01 ? 1 : 0)}
+      </span>
+      {single ? (
+        <>
+          <span className="text-xs font-medium">
+            {teamKo(c.parts[0].team1)} vs {teamKo(c.parts[0].team2)}
+          </span>
+          {resultChip(c.parts[0].team1, c.parts[0].team2, c.parts[0].result)}
+        </>
+      ) : (
+        <span className="flex flex-wrap gap-1">
+          {c.parts.map((p, i) => (
+            <span key={i} className="inline-flex items-center gap-1 text-xs">
+              {teamKo(p.team1)} vs {teamKo(p.team2)} {resultChip(p.team1, p.team2, p.result)}
+            </span>
+          ))}
+        </span>
+      )}
+      <span className="text-muted">→</span>
+      {multiOutcome ? (
+        <span className="inline-flex flex-wrap items-center gap-1.5">
+          {(["advance", "third", "out"] as Outcome[]).map((o) => {
+            const r = c.outcomeRates[o];
+            if (!r) return null;
+            return (
+              <span key={o} className="inline-flex items-center gap-1">
+                <OutcomePill outcome={o} />
+                <span className="text-[11px] font-semibold text-muted tnum">{pct(r)}</span>
+              </span>
+            );
+          })}
+        </span>
+      ) : onlyThird && primarySnapshot ? (
+        <span className="inline-flex flex-wrap items-center gap-1.5 text-xs">
+          <OutcomePill outcome="third" />
+          <span className="text-muted">→</span>
+          <span className="font-semibold text-[var(--color-kor-gold)]">
+            3위 순위 {snapshotLine(primarySnapshot)}
+          </span>
+          <span
+            className={`rounded px-1.5 py-0.5 text-[10px] font-bold ${
+              primarySnapshot.qualifies
+                ? "bg-[var(--color-kor-gold-soft)] text-[var(--color-kor-gold)]"
+                : "bg-[var(--color-kor-ink-soft)] text-[var(--color-kor-ink)]"
+            }`}
+          >
+            {primarySnapshot.qualifies ? "8위권 진출" : "8위 밖"}
+          </span>
+        </span>
+      ) : onlyOut ? (
+        <span className="inline-flex items-center gap-1.5 text-xs">
+          <OutcomePill outcome="out" />
+          <span className="font-medium text-[var(--color-kor-ink)]">조별리그 탈락</span>
+        </span>
+      ) : (
+        c.outcome.map((o) => <OutcomePill key={o} outcome={o} />)
+      )}
+    </li>
+  );
+}
+
+function ThirdFollowUpPanel({
+  tf,
+  focusGroup,
+}: {
+  tf: ThirdFollowUp;
+  focusGroup: GroupId;
+}) {
+  const primary = tf.snapshots[0];
+
+  return (
+    <div className="border-t border-[var(--color-kor-gold)]/15 bg-[var(--color-kor-gold-soft)]/20 px-3.5 py-3">
+      <p className="mb-2 text-xs font-bold tracking-wide text-[var(--color-kor-gold)]">
+        패 이후 · 조 3위 와일드카드 순위
+      </p>
+
+      <div className="mb-3 flex flex-wrap gap-2">
+        <span className="inline-flex items-center gap-1.5 rounded-lg border border-[var(--color-kor-gold)]/30 bg-[var(--color-kor-gold-soft)] px-2.5 py-1.5 text-xs">
+          <span className="font-bold text-[var(--color-kor-gold)]">조 3위</span>
+          <span className="text-lg font-black tabular-nums text-[var(--color-kor-gold)]">
+            {pct(tf.rank3Share, tf.rank3Share < 0.01 ? 1 : 0)}
+          </span>
+        </span>
+        <span className="inline-flex items-center gap-1.5 rounded-lg border border-[var(--color-kor-ink)]/25 bg-[var(--color-kor-ink-soft)] px-2.5 py-1.5 text-xs">
+          <span className="font-bold text-[var(--color-kor-ink)]">조 4위 탈락</span>
+          <span className="text-lg font-black tabular-nums text-[var(--color-kor-ink)]">
+            {pct(tf.rank4Share, tf.rank4Share < 0.01 ? 1 : 0)}
+          </span>
+        </span>
+      </div>
+
+      {primary && (
+        <div className="mb-3 rounded-lg border border-[var(--color-kor-gold)]/20 bg-[var(--color-card)] p-3">
+          <p className="text-xs font-semibold text-muted">
+            3위일 때 와일드카드 진출{" "}
+            <span className="font-black text-[var(--color-kor-gold)]">
+              {pct(tf.wildcardRate, tf.wildcardRate < 0.01 ? 1 : 0)}
+            </span>
+          </p>
+          <p className="mt-1 text-sm font-bold text-balance">
+            {snapshotLine(primary)}
+            <span
+              className={`ml-2 rounded px-1.5 py-0.5 text-xs ${
+                primary.qualifies
+                  ? "bg-[var(--color-kor-gold-soft)] text-[var(--color-kor-gold)]"
+                  : "bg-[var(--color-kor-ink-soft)] text-[var(--color-kor-ink)]"
+              }`}
+            >
+              {primary.qualifies ? "진출권" : "탈락권"}
+            </span>
+          </p>
+          {tf.snapshots.length > 1 && (
+            <ul className="mt-2 flex flex-col gap-1 border-t border-[var(--color-kor-gold)]/10 pt-2">
+              {tf.snapshots.slice(1, 4).map((s, i) => (
+                <li key={i} className="flex flex-wrap items-center gap-2 text-[11px] text-muted">
+                  <span className="font-bold tabular-nums text-[var(--color-kor-gold)]">
+                    {pct(s.share, s.share < 0.01 ? 1 : 0)}
+                  </span>
+                  <span>{snapshotLine(s)}</span>
+                </li>
+              ))}
+            </ul>
+          )}
+        </div>
+      )}
+
+      {tf.comparisonTable.length > 0 && (
+        <div className="rounded-lg border border-[var(--color-kor-red)]/10 bg-[var(--color-card)] p-2">
+          <p className="mb-2 px-1 text-[11px] font-medium text-muted">
+            12개 조 3위 비교 · 승점 → 득실 → 득점 (타 조는 현재 순위)
+          </p>
+          <ThirdPlaceTable rows={tf.comparisonTable} highlightGroup={focusGroup} />
+        </div>
+      )}
+    </div>
   );
 }
 
 export function ScenarioSummary({
   focus,
   branches,
+  thirdFollowUp,
+  focusGroup,
 }: {
   focus: string;
   branches: FocusBranch[];
+  totalCombos?: number;
+  thirdFollowUp?: ThirdFollowUp | null;
+  focusGroup?: GroupId;
 }) {
   if (branches.length === 0) {
     return (
@@ -120,53 +315,95 @@ export function ScenarioSummary({
   }
 
   return (
-    <ul className="flex flex-col gap-2.5">
+    <div className="flex flex-col gap-3">
       {branches.map((b) => {
-        const described =
-          b.verdict === "depends" ? describeConditions(b.conditions) : [];
+        const wdl = b.ownResult[0];
+        const isWin = wdl === "W";
+        const isDraw = wdl === "D";
+        const rates = [b.advanceRate, b.thirdRate, b.outRate].filter((r) => r > 0);
+        const singleOutcome = rates.length === 1;
         return (
-          <li
+          <article
             key={b.ownResult.join()}
-            className="group rounded-xl border bg-[var(--color-card)] p-3.5 transition-all hover:border-ink/20 hover:shadow-[var(--shadow-lift)]"
+            className={`overflow-hidden rounded-xl border-2 bg-[var(--color-card)] ${
+              isWin
+                ? "border-[var(--color-kor-red)]/25"
+                : isDraw
+                  ? "border-[var(--color-kor-blue)]/25"
+                  : "border-[var(--color-kor-ink)]/20"
+            }`}
           >
-            <div className="flex items-center justify-between gap-3">
-              <div className="flex items-center gap-2.5">
-                <span
-                  className={`grid size-8 shrink-0 place-items-center rounded-lg text-sm font-bold transition-transform group-hover:scale-110 ${
-                    WDL_BADGE[b.ownResult[0]] ?? "bg-surface"
-                  }`}
-                >
-                  {WDL_CHAR[b.ownResult[0]] ?? b.ownLabel}
-                </span>
-                <span className="text-sm font-medium text-balance">
-                  {ownPhrase(focus, b)}
-                </span>
+            <div
+              className={`flex items-center gap-3 px-3.5 py-3 ${
+                isWin
+                  ? "bg-[var(--color-kor-red-soft)]"
+                  : isDraw
+                    ? "bg-[var(--color-kor-blue-soft)]"
+                    : "bg-[var(--color-kor-ink-soft)]"
+              }`}
+            >
+              <span
+                className={`grid size-11 shrink-0 place-items-center rounded-lg text-lg font-black ${
+                  WDL_BADGE[wdl] ?? "bg-surface"
+                }`}
+              >
+                {WDL_CHAR[wdl] ?? b.ownLabel}
+              </span>
+              <div className="min-w-0 flex-1">
+                <p className="text-sm font-semibold text-balance">{ownHeadline(focus, b)}</p>
+                {singleOutcome && (
+                  <div className="mt-2">
+                    <OutcomeTiles
+                      advance={b.advanceRate}
+                      third={b.thirdRate}
+                      out={b.outRate}
+                    />
+                  </div>
+                )}
               </div>
-              {branchVerdictPill(b)}
+              <span
+                className={`shrink-0 text-2xl font-black tabular-nums ${
+                  isWin
+                    ? "text-[var(--color-kor-red)]"
+                    : isDraw
+                      ? "text-[var(--color-kor-blue)]"
+                      : "text-[var(--color-kor-ink)]"
+                }`}
+              >
+                {pct(b.share, b.share < 0.01 ? 1 : 0)}
+              </span>
             </div>
 
-            {b.verdict === "depends" && (
-              <ul className="mt-2.5 flex flex-col gap-1.5 border-t pt-2.5 text-sm">
-                {described.map((d, i) => (
-                  <li
+            {!singleOutcome && (
+              <div className="px-3.5 py-3">
+                <OutcomeTiles
+                  advance={b.advanceRate}
+                  third={b.thirdRate}
+                  out={b.outRate}
+                />
+              </div>
+            )}
+
+            {b.verdict === "depends" && b.conditions.length > 0 && (
+              <ul className="flex flex-col gap-1.5 border-t border-[var(--color-kor-red)]/10 px-3.5 py-3">
+                {b.conditions.map((c, i) => (
+                  <ConditionRow
                     key={i}
-                    className="flex flex-wrap items-center gap-x-1.5 gap-y-1"
-                  >
-                    <span className="text-muted">{d.text}</span>
-                    <span className="text-muted">→</span>
-                    {d.outcome.map((o) => (
-                      <OutcomePill key={o} outcome={o} />
-                    ))}
-                    {d.outcome.length > 1 && (
-                      <span className="text-xs text-muted">(득실차로 갈림)</span>
-                    )}
-                  </li>
+                    c={c}
+                    primarySnapshot={
+                      wdl === "L" ? thirdFollowUp?.snapshots[0] : undefined
+                    }
+                  />
                 ))}
               </ul>
             )}
-          </li>
+
+            {wdl === "L" && thirdFollowUp && b.thirdRate > 0 && focusGroup && (
+              <ThirdFollowUpPanel tf={thirdFollowUp} focusGroup={focusGroup} />
+            )}
+          </article>
         );
       })}
-    </ul>
+    </div>
   );
 }

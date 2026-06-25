@@ -23,6 +23,16 @@
   --color-danger: oklch(0.44 0.19 355);
   --color-danger-soft: oklch(0.95 0.02 355);
 
+  /* 시나리오·응원 UI — 채도 높은 공식 톤 */
+  --color-kor-red: oklch(0.48 0.21 355);
+  --color-kor-red-soft: oklch(0.93 0.045 355);
+  --color-kor-blue: oklch(0.42 0.16 250);
+  --color-kor-blue-soft: oklch(0.93 0.035 250);
+  --color-kor-gold: oklch(0.62 0.17 72);
+  --color-kor-gold-soft: oklch(0.94 0.055 72);
+  --color-kor-ink: oklch(0.32 0.025 260);
+  --color-kor-ink-soft: oklch(0.91 0.012 260);
+
   --ambient-primary: oklch(0.52 0.19 355 / 0.08);
   --ambient-accent: oklch(0.38 0.12 250 / 0.07);
   --ambient-bottom: oklch(0.52 0.19 355 / 0.05);
@@ -249,4 +259,59 @@ body {
   );
   transform: translateX(-200%);
   animation: shimmer 2.4s ease-in-out infinite;
+}
+
+/* ── 홈 히어로 ── */
+.hero {
+  overflow: hidden;
+  border-radius: calc(var(--radius-lg) + 4px);
+  border: 1px solid var(--color-border);
+}
+
+.hero-media {
+  position: relative;
+  aspect-ratio: 16 / 9;
+  background: oklch(0.06 0.015 355);
+}
+
+.hero-bg-video {
+  position: absolute;
+  inset: 0;
+  height: 100%;
+  width: 100%;
+  object-fit: cover;
+  object-position: center;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .hero-bg-video {
+    display: none;
+  }
+}
+
+.hero-overlay {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: linear-gradient(
+    to top,
+    oklch(0.04 0.015 355 / 0.95) 0%,
+    oklch(0.04 0.015 355 / 0.55) 38%,
+    oklch(0.04 0.015 355 / 0.15) 68%,
+    transparent 100%
+  );
+}
+
+.hero-body {
+  position: absolute;
+  inset-inline: 0;
+  bottom: 0;
+  z-index: 1;
+  padding: 1rem 1rem 1.25rem;
+}
+
+@media (min-width: 768px) {
+  .hero-body {
+    padding: 1.25rem 1.5rem 1.5rem;
+  }
 }
