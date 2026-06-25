@@ -60,23 +60,30 @@ function Side({
   );
 }
 
-function MatchCard({ m }: { m: BMatch }) {
-  const decided = !!(m.winner && m.side1.name && m.side2.name);
+function MatchCard({
+  m,
+  confirmedOnly,
+}: {
+  m: BMatch;
+  confirmedOnly: boolean;
+}) {
+  const decided = !confirmedOnly && !!(m.winner && m.side1.name && m.side2.name);
   const sideState = (
-    sideName: string | null,
+    side: BMatch["side1"],
   ): "pending" | "neutral" | "win" | "lose" => {
-    if (!sideName) return "pending";
+    if (confirmedOnly) return side.locked && side.name ? "neutral" : "pending";
+    if (!side.name) return "pending";
     if (!decided) return "neutral";
-    return m.winner === sideName ? "win" : "lose";
+    return m.winner === side.name ? "win" : "lose";
   };
   return (
     <div
       style={{ height: CARD_H }}
       className="flex flex-col justify-center overflow-hidden rounded-lg border bg-[var(--color-card)]"
     >
-      <Side name={m.side1.name} state={sideState(m.side1.name)} />
+      <Side name={m.side1.name} state={sideState(m.side1)} />
       <div className="h-px bg-[var(--color-border)]" />
-      <Side name={m.side2.name} state={sideState(m.side2.name)} />
+      <Side name={m.side2.name} state={sideState(m.side2)} />
     </div>
   );
 }
@@ -116,10 +123,18 @@ function Connector({
 
 const FALLBACK_ROUNDS = 16;
 
-function FullBracket({ bracket }: { bracket: ProjectedBracket }) {
+/** 32강~결승 전체 브래킷 (시뮬레이션 / 확정) */
+function FullBracket({
+  bracket,
+  confirmedOnly = false,
+}: {
+  bracket: ProjectedBracket;
+  confirmedOnly?: boolean;
+}) {
   const rounds = bracket.rounds;
   const leafCount = rounds[0]?.matches.length ?? FALLBACK_ROUNDS;
   const bodyHeight = leafCount * CARD_H + (leafCount - 1) * 8; // 카드 + gap
+  const champion = confirmedOnly ? null : bracket.champion;
 
   return (
     <div className="overflow-x-auto pb-3 [scrollbar-width:thin]">
@@ -138,7 +153,7 @@ function FullBracket({ bracket }: { bracket: ProjectedBracket }) {
                 className="flex flex-col justify-around"
               >
                 {round.matches.map((m) => (
-                  <MatchCard key={m.id} m={m} />
+                  <MatchCard key={m.id} m={m} confirmedOnly={confirmedOnly} />
                 ))}
               </div>
             </div>
@@ -178,20 +193,18 @@ function FullBracket({ bracket }: { bracket: ProjectedBracket }) {
                 <span className="text-3xl" aria-hidden>
                   🏆
                 </span>
-                {bracket.champion ? (
+                {champion ? (
                   <>
-                    {teamFlagUrl(bracket.champion, 60) ? (
+                    {teamFlagUrl(champion, 60) ? (
                       // eslint-disable-next-line @next/next/no-img-element
                       <img
-                        src={teamFlagUrl(bracket.champion, 60)!}
+                        src={teamFlagUrl(champion, 60)!}
                         alt=""
                         aria-hidden
                         className="h-6 w-9 rounded-[3px] object-cover ring-1 ring-black/5"
                       />
                     ) : null}
-                    <span className="text-sm font-bold">
-                      {teamKo(bracket.champion)}
-                    </span>
+                    <span className="text-sm font-bold">{teamKo(champion)}</span>
                   </>
                 ) : (
                   <span className="text-xs text-muted">미정</span>
@@ -205,8 +218,8 @@ function FullBracket({ bracket }: { bracket: ProjectedBracket }) {
   );
 }
 
-function ConfirmedTeam({ name }: { name: string }) {
-  const url = teamFlagUrl(name, 40);
+function TeamRow({ name }: { name: string | null }) {
+  const url = name ? teamFlagUrl(name, 40) : null;
   return (
     <div className="flex items-center gap-2">
       {url ? (
@@ -220,43 +233,29 @@ function ConfirmedTeam({ name }: { name: string }) {
       ) : (
         <span className="inline-block h-4 w-6 shrink-0 rounded-[2px] bg-surface" />
       )}
-      <span className="text-sm font-semibold">{teamKo(name)}</span>
+      <span
+        className={`text-sm ${name ? "font-semibold" : "text-muted"}`}
+      >
+        {name ? teamKo(name) : "미정"}
+      </span>
     </div>
   );
 }
 
-function ConfirmedBracket({ matches }: { matches: BMatch[] }) {
-  const confirmed = matches.filter(
-    (m) => m.side1.locked && m.side2.locked && m.side1.name && m.side2.name,
-  );
-
-  if (confirmed.length === 0) {
-    return (
-      <div className="rounded-xl border border-dashed py-10 text-center text-sm text-muted">
-        아직 자리가 확정된 32강 대진이 없습니다.
-        <br />
-        <span className="text-xs">
-          조별리그가 끝난 조의 1·2위가 정해지면 여기에 표시됩니다.
-        </span>
-      </div>
-    );
-  }
-
+/** 현재 순위 기준 32강 예상 대진 (한 라운드만) */
+function ProjectedR32({ matches }: { matches: BMatch[] }) {
   return (
-    <div className="grid gap-2.5 sm:grid-cols-2">
-      {confirmed.map((m) => (
-        <div
-          key={m.id}
-          className="rounded-xl border bg-[var(--color-card)] p-3"
-        >
+    <div className="grid gap-2.5 sm:grid-cols-2 lg:grid-cols-3">
+      {matches.map((m) => (
+        <div key={m.id} className="rounded-xl border bg-[var(--color-card)] p-3">
           <div className="mb-2 flex items-center justify-between text-[11px] text-muted">
             <span className="font-semibold">32강</span>
             {m.kickoff ? <span className="tnum">{kstDate(m.kickoff)}</span> : null}
           </div>
           <div className="flex flex-col gap-1.5">
-            <ConfirmedTeam name={m.side1.name!} />
+            <TeamRow name={m.side1.name} />
             <span className="pl-1 text-[10px] font-bold text-muted">VS</span>
-            <ConfirmedTeam name={m.side2.name!} />
+            <TeamRow name={m.side2.name} />
           </div>
         </div>
       ))}
@@ -264,20 +263,25 @@ function ConfirmedBracket({ matches }: { matches: BMatch[] }) {
   );
 }
 
-type Tab = "confirmed" | "projected";
+type Tab = "confirmed" | "projected" | "simulation";
 
 export function BracketView({ bracket }: { bracket: ProjectedBracket }) {
   const r32 = bracket.rounds[0]?.matches ?? [];
-  const confirmedCount = r32.filter(
-    (m) => m.side1.locked && m.side2.locked && m.side1.name && m.side2.name,
-  ).length;
+  const confirmedTeams = r32.reduce(
+    (n, m) =>
+      n +
+      (m.side1.locked && m.side1.name ? 1 : 0) +
+      (m.side2.locked && m.side2.name ? 1 : 0),
+    0,
+  );
   const [tab, setTab] = useState<Tab>(
-    confirmedCount > 0 ? "confirmed" : "projected",
+    confirmedTeams > 0 ? "confirmed" : "projected",
   );
 
   const tabs: { id: Tab; label: string }[] = [
-    { id: "confirmed", label: `확정 대진${confirmedCount ? ` ${confirmedCount}` : ""}` },
-    { id: "projected", label: "예상 대진" },
+    { id: "confirmed", label: `확정${confirmedTeams ? ` ${confirmedTeams}팀` : ""}` },
+    { id: "projected", label: "예상" },
+    { id: "simulation", label: "시뮬레이션" },
   ];
 
   return (
@@ -299,10 +303,16 @@ export function BracketView({ bracket }: { bracket: ProjectedBracket }) {
         ))}
       </div>
 
-      {tab === "confirmed" ? (
-        <ConfirmedBracket matches={r32} />
+      {tab === "confirmed" && confirmedTeams === 0 && (
+        <p className="mb-2 text-xs text-muted">
+          아직 확정된 진출팀이 없습니다. 조별리그가 끝난 조의 1·2위부터 표시됩니다.
+        </p>
+      )}
+
+      {tab === "projected" ? (
+        <ProjectedR32 matches={r32} />
       ) : (
-        <FullBracket bracket={bracket} />
+        <FullBracket bracket={bracket} confirmedOnly={tab === "confirmed"} />
       )}
     </div>
   );

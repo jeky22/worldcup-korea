@@ -64,10 +64,11 @@ export default async function BracketPage() {
         <SectionHeading>대진표</SectionHeading>
         <BracketView bracket={bracket} />
         <p className="mt-3 text-xs text-muted">
-          <span className="font-medium text-ink">확정</span> 탭은 조별리그가 끝나 자리가
-          확정된 32강 대진만 보여줍니다.{" "}
-          <span className="font-medium text-ink">예상</span> 탭은 FIFA 랭킹이 높은 팀이
-          올라간다고 가정한 32강~결승 예측이며, 3위 와일드카드 배정은 FIFA Annex C 규정을
+          <span className="font-medium text-ink">확정</span>: 조별리그가 끝나 자리가 확정된
+          진출팀.{" "}
+          <span className="font-medium text-ink">예상</span>: 현재 순위 기준 32강 대진.{" "}
+          <span className="font-medium text-ink">시뮬레이션</span>: FIFA 랭킹이 높은 팀이
+          올라간다고 가정한 32강~결승 예측. 3위 와일드카드 배정은 FIFA Annex C 규정을
           따릅니다 (실제 예측 아님).
         </p>
       </Reveal>
