@@ -132,12 +132,23 @@ export function projectBracket(
   const qualifyingGroups = tpt.filter((r) => r.qualifies).map((r) => r.group);
   const thirdAssign = annexCAssign(qualifyingGroups);
 
+  // 조별리그 완료 여부 → 1·2위 진출/시드 확정 판단
+  const groupComplete = {} as Record<GroupId, boolean>;
+  for (const g of GROUP_IDS) {
+    const gm = matches.filter((m) => m.stage === "group" && m.group === g);
+    groupComplete[g] = gm.length > 0 && gm.every((m) => m.score);
+  }
+  // 3위 와일드카드 배정은 12개 조가 모두 끝나야 확정
+  const allGroupsComplete = GROUP_IDS.every((g) => groupComplete[g]);
+
   const koMatches = matches
     .filter((m) => m.stage !== "group")
     .sort((a, b) => numFromId(a.id) - numFromId(b.id));
 
   const winnerOf = new Map<string, string | null>();
   const loserOf = new Map<string, string | null>();
+  // 해당 KO 경기가 실제로 치러져 결과가 확정됐는지
+  const playedDecided = new Map<string, boolean>();
 
   const resolve = (matchId: string, label: string): string | null => {
     const gs = label.match(GROUP_SLOT);
@@ -157,27 +168,45 @@ export function projectBracket(
     return null;
   };
 
+  const sideLocked = (label: string, name: string | null): boolean => {
+    if (!name) return false;
+    const gs = label.match(GROUP_SLOT);
+    if (gs) return groupComplete[gs[2] as GroupId];
+    if (label.match(THIRD_SLOT)) return allGroupsComplete;
+    const w = label.match(WIN_REF);
+    if (w) return playedDecided.get(`m${w[1]}`) ?? false;
+    const l = label.match(LOSE_REF);
+    if (l) return playedDecided.get(`m${l[1]}`) ?? false;
+    return false;
+  };
+
   const built: BMatch[] = [];
   for (const m of koMatches) {
     const name1 = m.team1 || resolve(m.id, m.team1Label ?? "");
     const name2 = m.team2 || resolve(m.id, m.team2Label ?? "");
     let winner: string | null;
     let loser: string | null;
-    if (m.score && m.team1 && m.team2) {
-      winner = m.score[0] >= m.score[1] ? m.team1 : m.team2;
-      loser = m.score[0] >= m.score[1] ? m.team2 : m.team1;
+    const played = !!(m.score && m.team1 && m.team2);
+    if (played) {
+      winner = m.score![0] >= m.score![1] ? m.team1 : m.team2;
+      loser = m.score![0] >= m.score![1] ? m.team2 : m.team1;
     } else {
       winner = pickFavored(name1, name2, opts?.favor);
       loser = winner === name1 ? name2 : name1;
     }
     winnerOf.set(m.id, winner);
     loserOf.set(m.id, loser);
+    const label1 = m.team1Label ?? m.team1;
+    const label2 = m.team2Label ?? m.team2;
+    const locked1 = m.team1 ? true : sideLocked(label1, name1);
+    const locked2 = m.team2 ? true : sideLocked(label2, name2);
+    playedDecided.set(m.id, played && locked1 && locked2);
     built.push({
       id: m.id,
       num: numFromId(m.id),
       stage: m.stage,
-      side1: { name: name1, label: m.team1Label ?? m.team1 },
-      side2: { name: name2, label: m.team2Label ?? m.team2 },
+      side1: { name: name1, label: label1, locked: locked1 },
+      side2: { name: name2, label: label2, locked: locked2 },
       winner,
       date: m.date,
       kickoff: m.kickoff,

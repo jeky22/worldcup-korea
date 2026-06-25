@@ -44,6 +44,8 @@ export interface KoVerbBlock {
 export interface BSide {
   name: string | null;
   label: string;
+  /** 이 자리가 확정됐는지 (조별리그 완료로 진출·시드 확정, 또는 실제 경기 결과) */
+  locked: boolean;
 }
 export interface BMatch {
   id: string;

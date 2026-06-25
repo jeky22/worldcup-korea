@@ -1,8 +1,10 @@
 "use client";
 
+import { useState } from "react";
 import type { ReactNode } from "react";
 import type { BMatch, ProjectedBracket } from "@/lib/bracket-types";
 import { teamKo, teamFlagUrl } from "@/lib/teams";
+import { kstDate } from "@/lib/format";
 
 const CARD_H = 56; // 매치 카드 높이(px)
 const LABEL_H = 30; // 라운드 라벨 높이(px) — 컬럼/연결선 정렬 기준
@@ -114,7 +116,7 @@ function Connector({
 
 const FALLBACK_ROUNDS = 16;
 
-export function BracketView({ bracket }: { bracket: ProjectedBracket }) {
+function FullBracket({ bracket }: { bracket: ProjectedBracket }) {
   const rounds = bracket.rounds;
   const leafCount = rounds[0]?.matches.length ?? FALLBACK_ROUNDS;
   const bodyHeight = leafCount * CARD_H + (leafCount - 1) * 8; // 카드 + gap
@@ -199,6 +201,109 @@ export function BracketView({ bracket }: { bracket: ProjectedBracket }) {
           </div>
         </div>
       </div>
+    </div>
+  );
+}
+
+function ConfirmedTeam({ name }: { name: string }) {
+  const url = teamFlagUrl(name, 40);
+  return (
+    <div className="flex items-center gap-2">
+      {url ? (
+        // eslint-disable-next-line @next/next/no-img-element
+        <img
+          src={url}
+          alt=""
+          aria-hidden
+          className="h-4 w-6 shrink-0 rounded-[2px] object-cover ring-1 ring-black/5"
+        />
+      ) : (
+        <span className="inline-block h-4 w-6 shrink-0 rounded-[2px] bg-surface" />
+      )}
+      <span className="text-sm font-semibold">{teamKo(name)}</span>
+    </div>
+  );
+}
+
+function ConfirmedBracket({ matches }: { matches: BMatch[] }) {
+  const confirmed = matches.filter(
+    (m) => m.side1.locked && m.side2.locked && m.side1.name && m.side2.name,
+  );
+
+  if (confirmed.length === 0) {
+    return (
+      <div className="rounded-xl border border-dashed py-10 text-center text-sm text-muted">
+        아직 자리가 확정된 32강 대진이 없습니다.
+        <br />
+        <span className="text-xs">
+          조별리그가 끝난 조의 1·2위가 정해지면 여기에 표시됩니다.
+        </span>
+      </div>
+    );
+  }
+
+  return (
+    <div className="grid gap-2.5 sm:grid-cols-2">
+      {confirmed.map((m) => (
+        <div
+          key={m.id}
+          className="rounded-xl border bg-[var(--color-card)] p-3"
+        >
+          <div className="mb-2 flex items-center justify-between text-[11px] text-muted">
+            <span className="font-semibold">32강</span>
+            {m.kickoff ? <span className="tnum">{kstDate(m.kickoff)}</span> : null}
+          </div>
+          <div className="flex flex-col gap-1.5">
+            <ConfirmedTeam name={m.side1.name!} />
+            <span className="pl-1 text-[10px] font-bold text-muted">VS</span>
+            <ConfirmedTeam name={m.side2.name!} />
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+type Tab = "confirmed" | "projected";
+
+export function BracketView({ bracket }: { bracket: ProjectedBracket }) {
+  const r32 = bracket.rounds[0]?.matches ?? [];
+  const confirmedCount = r32.filter(
+    (m) => m.side1.locked && m.side2.locked && m.side1.name && m.side2.name,
+  ).length;
+  const [tab, setTab] = useState<Tab>(
+    confirmedCount > 0 ? "confirmed" : "projected",
+  );
+
+  const tabs: { id: Tab; label: string }[] = [
+    { id: "confirmed", label: `확정 대진${confirmedCount ? ` ${confirmedCount}` : ""}` },
+    { id: "projected", label: "예상 대진" },
+  ];
+
+  return (
+    <div>
+      <div className="mb-3 inline-flex gap-1 rounded-lg border bg-surface p-1">
+        {tabs.map((t) => (
+          <button
+            key={t.id}
+            type="button"
+            onClick={() => setTab(t.id)}
+            className={`rounded-md px-3.5 py-1.5 text-sm font-semibold transition-colors ${
+              tab === t.id
+                ? "bg-[var(--color-card)] text-ink shadow-sm"
+                : "text-muted hover:text-ink"
+            }`}
+          >
+            {t.label}
+          </button>
+        ))}
+      </div>
+
+      {tab === "confirmed" ? (
+        <ConfirmedBracket matches={r32} />
+      ) : (
+        <FullBracket bracket={bracket} />
+      )}
     </div>
   );
 }

@@ -59,17 +59,16 @@ export default async function BracketPage() {
         <KoreaKnockout blocks={koBlocks} decided={koreaDecided} />
       </Reveal>
 
-      {/* 예상 대진표 */}
+      {/* 대진표 (확정 / 예상) */}
       <Reveal as="section" delay={40}>
-        <SectionHeading
-          aside={<span className="text-xs text-muted">FIFA 랭킹 기준</span>}
-        >
-          예상 대진표
-        </SectionHeading>
+        <SectionHeading>대진표</SectionHeading>
         <BracketView bracket={bracket} />
         <p className="mt-3 text-xs text-muted">
-          32강부터 결승까지 FIFA 랭킹이 높은 팀이 올라간다고 가정한 예상 대진입니다.
-          3위 와일드카드 배정은 FIFA Annex C(495 조합) 규정을 따릅니다 (실제 예측 아님).
+          <span className="font-medium text-ink">확정</span> 탭은 조별리그가 끝나 자리가
+          확정된 32강 대진만 보여줍니다.{" "}
+          <span className="font-medium text-ink">예상</span> 탭은 FIFA 랭킹이 높은 팀이
+          올라간다고 가정한 32강~결승 예측이며, 3위 와일드카드 배정은 FIFA Annex C 규정을
+          따릅니다 (실제 예측 아님).
         </p>
       </Reveal>
 
