@@ -1,7 +1,27 @@
 "use client";
 
-import { useEffect, useRef } from "react";
-import { ADSENSE_CLIENT, ADSENSE_SLOT } from "@/lib/ads";
+import { useEffect, useRef, useState } from "react";
+import {
+  ADSENSE_CLIENT,
+  ADSENSE_SLOT,
+  ADFIT_ENABLED,
+  ADFIT_UNIT_PC,
+  ADFIT_UNIT_MOBILE,
+} from "@/lib/ads";
+import { KakaoAdFit } from "./kakao-adfit";
+
+/** min 이상이면 true (PC). 마운트 전에는 null. */
+function useIsWide(min = 768) {
+  const [wide, setWide] = useState<boolean | null>(null);
+  useEffect(() => {
+    const mq = window.matchMedia(`(min-width: ${min}px)`);
+    const update = () => setWide(mq.matches);
+    update();
+    mq.addEventListener("change", update);
+    return () => mq.removeEventListener("change", update);
+  }, [min]);
+  return wide;
+}
 
 declare global {
   interface Window {
@@ -58,24 +78,31 @@ export function AdUnit({
   );
 }
 
-/** 가로형 배너 (본문 상·하단) */
+/**
+ * 본문 광고 (상·하단). 애드핏 사용 시 화면 폭에 맞는 한 종류만 렌더링한다.
+ * - PC(≥768px): 728×90 가로 배너
+ * - 모바일: 320×100 배너
+ */
 export function AdBanner({ className = "" }: { className?: string }) {
-  return (
-    <AdUnit
-      format="horizontal"
-      className={className}
-      minHeight={90}
-    />
-  );
-}
+  const wide = useIsWide(768);
 
-/** 본문 중간용 (모바일·데스크톱 반응형) */
-export function AdInFeed({ className = "" }: { className?: string }) {
-  return (
-    <AdUnit
-      format="auto"
-      className={className}
-      minHeight={250}
-    />
-  );
+  if (ADFIT_ENABLED) {
+    if (wide === null) return null;
+    return wide ? (
+      <KakaoAdFit
+        unit={ADFIT_UNIT_PC}
+        width={728}
+        height={90}
+        className={className}
+      />
+    ) : (
+      <KakaoAdFit
+        unit={ADFIT_UNIT_MOBILE}
+        width={320}
+        height={100}
+        className={className}
+      />
+    );
+  }
+  return <AdUnit format="horizontal" className={className} minHeight={90} />;
 }

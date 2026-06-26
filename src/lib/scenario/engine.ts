@@ -2,6 +2,7 @@ import type { GroupId, Match, StandingRow } from "../types";
 import { teamsInGroup, GROUP_IDS } from "../teams";
 import { rankTeams, resultsFromMatches, type Result } from "../standings";
 import { thirdPlaceTable, type ThirdPlaceRow } from "./third-place";
+import { forEachComboWeighted } from "./match-odds";
 
 /** 조 내 최종 성적 분류 */
 export type Outcome = "advance" | "third" | "out";
@@ -215,18 +216,20 @@ export function analyzeGroup(
 
   const { cap, exact } = pickCap(remaining.length);
 
-  // 팀별 분류 카운트
+  // 팀별 분류 확률 가중치 (weight 합 ≈ 1)
   const counts = new Map<string, Record<Outcome, number>>();
   for (const t of teams) counts.set(t, { advance: 0, third: 0, out: 0 });
 
-  let total = 0;
-  forEachCombo(remaining, cap, (hypo) => {
+  let total = 0; // 총 weight (≈1)
+  let comboTotal = 0; // 정수 조합 수
+  forEachComboWeighted(remaining, cap, (hypo, weight) => {
     const all = real.concat(hypo);
     const st = rankTeams(teams, all);
     for (const row of st) {
-      counts.get(row.team)![rankToOutcome(row.rank)]++;
+      counts.get(row.team)![rankToOutcome(row.rank)] += weight;
     }
-    total++;
+    total += weight;
+    comboTotal++;
   });
 
   const teamScenarios: TeamScenario[] = current.map((row) => {
@@ -262,7 +265,7 @@ export function analyzeGroup(
     current,
     remaining,
     teams: teamScenarios,
-    totalCombos: total,
+    totalCombos: comboTotal,
     goalCap: cap,
     exact,
   };
@@ -295,19 +298,23 @@ export function focusBranches(
 
   const { cap } = pickCap(remaining.length);
 
-  // ownResultKey -> otherKey(WDL 시퀀스) -> { outcomes, count, outcomeCounts }
+  // ownResultKey -> otherKey(WDL 시퀀스) -> { outcomes, count, weight, ... }
   type OtherEntry = {
     outcomes: Set<Outcome>;
     count: number;
+    weight: number;
     outcomeCounts: Record<Outcome, number>;
+    outcomeWeights: Record<Outcome, number>;
   };
   type Bucket = Map<string, Map<string, OtherEntry>>;
   const buckets: Bucket = new Map();
   const ownLabels = new Map<string, WDL[]>();
-  let totalCombos = 0;
+  let totalCombos = 0; // 정수 조합 수
+  let totalWeight = 0; // 총 weight (≈1)
 
-  forEachCombo(remaining, cap, (hypo) => {
+  forEachComboWeighted(remaining, cap, (hypo, weight) => {
     totalCombos++;
+    totalWeight += weight;
     const all = real.concat(hypo);
     const st = rankTeams(teams, all);
     const focusRank = st.find((r) => r.team === focus)!.rank;
@@ -342,13 +349,17 @@ export function focusBranches(
       entry = {
         outcomes: new Set(),
         count: 0,
+        weight: 0,
         outcomeCounts: { advance: 0, third: 0, out: 0 },
+        outcomeWeights: { advance: 0, third: 0, out: 0 },
       };
       byOther.set(otherKey, entry);
     }
     entry.outcomes.add(outcome);
     entry.count++;
+    entry.weight += weight;
     entry.outcomeCounts[outcome]++;
+    entry.outcomeWeights[outcome] += weight;
   });
 
   const ownMatchRefs: MatchRef[] = ownMatches.map((m) => ({
@@ -361,6 +372,7 @@ export function focusBranches(
     const ownWDL = ownLabels.get(ownKey)!;
     const allOutcomes = new Set<Outcome>();
     let branchCount = 0;
+    let branchWeight = 0;
     const branchOutcomes: Record<Outcome, number> = {
       advance: 0,
       third: 0,
@@ -368,10 +380,11 @@ export function focusBranches(
     };
     for (const entry of byOther.values()) {
       branchCount += entry.count;
+      branchWeight += entry.weight;
       for (const o of entry.outcomes) allOutcomes.add(o);
-      branchOutcomes.advance += entry.outcomeCounts.advance;
-      branchOutcomes.third += entry.outcomeCounts.third;
-      branchOutcomes.out += entry.outcomeCounts.out;
+      branchOutcomes.advance += entry.outcomeWeights.advance;
+      branchOutcomes.third += entry.outcomeWeights.third;
+      branchOutcomes.out += entry.outcomeWeights.out;
     }
     const verdict = ownVerdict(allOutcomes);
 
@@ -386,7 +399,7 @@ export function focusBranches(
         const outcomeRates: Partial<Record<Outcome, number>> = {};
         for (const o of ["advance", "third", "out"] as Outcome[]) {
           if (entry.outcomeCounts[o] > 0) {
-            outcomeRates[o] = entry.outcomeCounts[o] / entry.count;
+            outcomeRates[o] = entry.outcomeWeights[o] / entry.weight;
           }
         }
         conditions.push({
@@ -394,8 +407,8 @@ export function focusBranches(
           outcome: [...entry.outcomes].sort(
             (a, b) => OUTCOME_ORDER[a] - OUTCOME_ORDER[b],
           ),
-          share: entry.count / branchCount,
-          shareTotal: entry.count / totalCombos,
+          share: entry.weight / branchWeight,
+          shareTotal: entry.weight / totalWeight,
           comboCount: entry.count,
           outcomeRates,
         });
@@ -410,11 +423,11 @@ export function focusBranches(
       outcomes: [...allOutcomes].sort((a, b) => OUTCOME_ORDER[a] - OUTCOME_ORDER[b]),
       verdict,
       conditions,
-      share: branchCount / totalCombos,
+      share: branchWeight / totalWeight,
       comboCount: branchCount,
-      advanceRate: branchOutcomes.advance / branchCount,
-      thirdRate: branchOutcomes.third / branchCount,
-      outRate: branchOutcomes.out / branchCount,
+      advanceRate: branchOutcomes.advance / branchWeight,
+      thirdRate: branchOutcomes.third / branchWeight,
+      outRate: branchOutcomes.out / branchWeight,
     });
   }
 
@@ -502,18 +515,23 @@ export function focusVerbStats(
 
   type VerbAcc = {
     count: number;
-    outcomes: Record<Outcome, number>;
-    ranks: Map<number, number>;
+    weight: number;
+    outcomes: Record<Outcome, number>; // weighted
+    ranks: Map<number, { count: number; weight: number }>;
   };
-  const acc: Record<WDL, VerbAcc> = {
-    W: { count: 0, outcomes: { advance: 0, third: 0, out: 0 }, ranks: new Map() },
-    D: { count: 0, outcomes: { advance: 0, third: 0, out: 0 }, ranks: new Map() },
-    L: { count: 0, outcomes: { advance: 0, third: 0, out: 0 }, ranks: new Map() },
-  };
+  const mkAcc = (): VerbAcc => ({
+    count: 0,
+    weight: 0,
+    outcomes: { advance: 0, third: 0, out: 0 },
+    ranks: new Map(),
+  });
+  const acc: Record<WDL, VerbAcc> = { W: mkAcc(), D: mkAcc(), L: mkAcc() };
   let totalCombos = 0;
+  let totalWeight = 0;
 
-  forEachCombo(remaining, cap, (hypo) => {
+  forEachComboWeighted(remaining, cap, (hypo, weight) => {
     totalCombos++;
+    totalWeight += weight;
     const all = real.concat(hypo);
     const st = rankTeams(teams, all);
     const row = st.find((x) => x.team === focus)!;
@@ -526,25 +544,29 @@ export function focusVerbStats(
 
     const v = acc[res];
     v.count++;
-    v.outcomes[outcome]++;
-    v.ranks.set(row.rank, (v.ranks.get(row.rank) ?? 0) + 1);
+    v.weight += weight;
+    v.outcomes[outcome] += weight;
+    const rk = v.ranks.get(row.rank) ?? { count: 0, weight: 0 };
+    rk.count++;
+    rk.weight += weight;
+    v.ranks.set(row.rank, rk);
   });
 
   const verbs = {} as Record<WDL, FocusVerbStat>;
   for (const key of ["W", "D", "L"] as WDL[]) {
     const v = acc[key];
     verbs[key] = {
-      share: v.count / totalCombos,
+      share: totalWeight ? v.weight / totalWeight : 0,
       comboCount: v.count,
-      advanceRate: v.count ? v.outcomes.advance / v.count : 0,
-      thirdRate: v.count ? v.outcomes.third / v.count : 0,
-      outRate: v.count ? v.outcomes.out / v.count : 0,
+      advanceRate: v.weight ? v.outcomes.advance / v.weight : 0,
+      thirdRate: v.weight ? v.outcomes.third / v.weight : 0,
+      outRate: v.weight ? v.outcomes.out / v.weight : 0,
       ranks: [...v.ranks.entries()]
         .sort((a, b) => a[0] - b[0])
-        .map(([rank, comboCount]) => ({
+        .map(([rank, rk]) => ({
           rank,
-          comboCount,
-          share: v.count ? comboCount / v.count : 0,
+          comboCount: rk.count,
+          share: v.weight ? rk.weight / v.weight : 0,
         })),
     };
   }
@@ -579,15 +601,15 @@ export function groupRankDistribution(
   }
 
   const { cap } = pickCap(remaining.length);
-  let total = 0;
+  let total = 0; // 총 weight (≈1)
 
-  forEachCombo(remaining, cap, (hypo) => {
-    total++;
+  forEachComboWeighted(remaining, cap, (hypo, weight) => {
+    total += weight;
     const all = real.concat(hypo);
     const st = rankTeams(teams, all);
     for (const row of st) {
       const m = byRank.get(row.rank)!;
-      m.set(row.team, (m.get(row.team) ?? 0) + 1);
+      m.set(row.team, (m.get(row.team) ?? 0) + weight);
     }
   });
 
@@ -614,15 +636,15 @@ export function focusThirdWildcardRate(
   if (remaining.length === 0) return null;
 
   const { cap } = pickCap(remaining.length);
-  let thirdCount = 0;
-  let qualifyCount = 0;
+  let thirdWeight = 0;
+  let qualifyWeight = 0;
 
-  forEachCombo(remaining, cap, (hypo) => {
+  forEachComboWeighted(remaining, cap, (hypo, weight) => {
     const all = real.concat(hypo);
     const st = rankTeams(teams, all);
     const row = st.find((x) => x.team === focus)!;
     if (row.rank !== 3) return;
-    thirdCount++;
+    thirdWeight += weight;
 
     const merged = matches.map((m) => {
       if (m.group !== group || m.score) return m;
@@ -631,10 +653,10 @@ export function focusThirdWildcardRate(
       return m;
     });
     const tpt = thirdPlaceTable(merged);
-    if (tpt.some((r) => r.group === group && r.qualifies)) qualifyCount++;
+    if (tpt.some((r) => r.group === group && r.qualifies)) qualifyWeight += weight;
   });
 
-  return thirdCount ? qualifyCount / thirdCount : null;
+  return thirdWeight > 0 ? qualifyWeight / thirdWeight : null;
 }
 
 /** 패(또는 지정 WDL) 이후 조 3위 → 와일드카드 순위(승점·득실) 비교 */
@@ -709,18 +731,18 @@ export function analyzeThirdFollowUp(
   const firstOwn = ownMatches[0];
   const { cap } = pickCap(remaining.length);
 
-  let branchCount = 0;
-  let thirdCount = 0;
-  let rank4Count = 0;
-  let wcCount = 0;
+  let branchWeight = 0;
+  let thirdWeight = 0;
+  let rank4Weight = 0;
+  let wcWeight = 0;
   const snapshotCounts = new Map<
     string,
-    { snap: ThirdWildcardSnapshot; count: number; merged: Match[] }
+    { snap: ThirdWildcardSnapshot; weight: number; merged: Match[] }
   >();
   let primaryKey = "";
-  let primaryCount = 0;
+  let primaryWeight = 0;
 
-  forEachCombo(remaining, cap, (hypo) => {
+  forEachComboWeighted(remaining, cap, (hypo, weight) => {
     const r = hypo.find(
       (h) => h.a === firstOwn.team1 && h.b === firstOwn.team2,
     )!;
@@ -728,23 +750,23 @@ export function analyzeThirdFollowUp(
     if (firstOwn.team1 !== focus) res = res === "W" ? "L" : res === "L" ? "W" : "D";
     if (res !== ownFilter) return;
 
-    branchCount++;
+    branchWeight += weight;
     const all = real.concat(hypo);
     const st = rankTeams(teams, all);
     const row = st.find((x) => x.team === focus)!;
 
     if (row.rank === 3) {
-      thirdCount++;
+      thirdWeight += weight;
       const merged = mergeGroupHypo(matches, group, hypo);
       const tpt = thirdPlaceTable(merged);
       const groupRow = tpt.find((x) => x.group === group)!;
       const qualifies = groupRow.qualifies;
-      if (qualifies) wcCount++;
+      if (qualifies) wcWeight += weight;
 
       const key = `${groupRow.points},${groupRow.gd},${groupRow.gf},${groupRow.rank}`;
       const existing = snapshotCounts.get(key);
       if (existing) {
-        existing.count++;
+        existing.weight += weight;
       } else {
         snapshotCounts.set(key, {
           snap: {
@@ -756,31 +778,31 @@ export function analyzeThirdFollowUp(
             qualifies,
             share: 0,
           },
-          count: 1,
+          weight,
           merged,
         });
       }
       const entry = snapshotCounts.get(key)!;
-      if (entry.count > primaryCount) {
-        primaryCount = entry.count;
+      if (entry.weight > primaryWeight) {
+        primaryWeight = entry.weight;
         primaryKey = key;
       }
     } else if (row.rank === 4) {
-      rank4Count++;
+      rank4Weight += weight;
     }
   });
 
-  if (branchCount === 0) return null;
+  if (branchWeight === 0) return null;
 
   const snapshots = [...snapshotCounts.values()]
-    .map(({ snap, count }) => ({
+    .map(({ snap, weight }) => ({
       ...snap,
-      share: thirdCount ? count / thirdCount : 0,
+      share: thirdWeight > 0 ? weight / thirdWeight : 0,
     }))
     .sort((a, b) => b.share - a.share);
 
   const primaryMerged = snapshotCounts.get(primaryKey)?.merged ?? matches;
-  const comparisonTable = thirdCount ? thirdPlaceTable(primaryMerged) : [];
+  const comparisonTable = thirdWeight > 0 ? thirdPlaceTable(primaryMerged) : [];
   const incompleteGroups = comparisonTable.filter(
     (r) => !r.groupComplete && r.group !== group,
   ).length;
@@ -789,9 +811,9 @@ export function analyzeThirdFollowUp(
   );
 
   return {
-    rank3Share: thirdCount / branchCount,
-    rank4Share: rank4Count / branchCount,
-    wildcardRate: thirdCount ? wcCount / thirdCount : 0,
+    rank3Share: branchWeight > 0 ? thirdWeight / branchWeight : 0,
+    rank4Share: branchWeight > 0 ? rank4Weight / branchWeight : 0,
+    wildcardRate: thirdWeight > 0 ? wcWeight / thirdWeight : 0,
     snapshotOnly,
     incompleteGroups,
     snapshots,

@@ -6,7 +6,8 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "sync": "tsx scripts/sync.ts"
+    "sync": "tsx scripts/sync.ts",
+    "generate-logo": "tsx scripts/generate-logo.ts"
   },
   "dependencies": {
     "cheerio": "^1.2.0",
@@ -21,6 +22,7 @@
     "@types/react": "^19",
     "@types/react-dom": "^19",
     "playwright": "^1.61.0",
+    "sharp": "^0.35.2",
     "tailwindcss": "^4",
     "tsx": "^4.22.4",
     "typescript": "^5"

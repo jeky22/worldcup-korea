@@ -2,8 +2,11 @@
 
 import { useEffect, useState } from "react";
 import { Flag, TeamLabel } from "./ui";
+import { WatchLinks } from "./watch-links";
 import { HERO_VIDEO } from "@/lib/site";
 import { kstDateTime } from "@/lib/format";
+import type { WatchMatch } from "@/lib/scenario/watch-matches";
+import { describeDanger } from "@/lib/scenario/danger-text";
 
 interface NextMatch {
   team1: string;
@@ -23,6 +26,7 @@ export interface HomeHeroProps {
   koreaGroup: string;
   nextMatch?: NextMatch;
   lastMatch?: LastMatch;
+  watchMatches?: WatchMatch[];
 }
 
 function pad(n: number) {
@@ -50,6 +54,32 @@ function useCountdown(target: number | null) {
   };
 }
 
+function useNow(active: boolean) {
+  const [now, setNow] = useState(0);
+  useEffect(() => {
+    setNow(Date.now());
+    if (!active) return;
+    const id = setInterval(() => setNow(Date.now()), 1000);
+    return () => clearInterval(id);
+  }, [active]);
+  return now;
+}
+
+function dangerText(m: WatchMatch): string {
+  const { lead, tail } = describeDanger(m);
+  return `${lead}${tail}`;
+}
+
+function countdownLabel(diff: number): string {
+  const d = Math.floor(diff / 86_400_000);
+  const h = Math.floor((diff % 86_400_000) / 3_600_000);
+  const mi = Math.floor((diff % 3_600_000) / 60_000);
+  const s = Math.floor((diff % 60_000) / 1000);
+  return d > 0
+    ? `D-${d} ${pad(h)}:${pad(mi)}:${pad(s)}`
+    : `${pad(h)}:${pad(mi)}:${pad(s)}`;
+}
+
 function CountdownUnit({ value, label }: { value: number; label: string }) {
   return (
     <div className="flex flex-col items-center gap-0.5">
@@ -61,8 +91,15 @@ function CountdownUnit({ value, label }: { value: number; label: string }) {
   );
 }
 
-export function HomeHero({ koreaGroup, nextMatch, lastMatch }: HomeHeroProps) {
+export function HomeHero({
+  koreaGroup,
+  nextMatch,
+  lastMatch,
+  watchMatches = [],
+}: HomeHeroProps) {
   const countdown = useCountdown(nextMatch?.kickoff ?? null);
+  const topWatch = !nextMatch ? watchMatches[0] : undefined;
+  const now = useNow(!!topWatch);
   const [motionOk, setMotionOk] = useState(true);
 
   useEffect(() => {
@@ -146,6 +183,43 @@ export function HomeHero({ koreaGroup, nextMatch, lastMatch }: HomeHeroProps) {
               {nextMatch.ground && (
                 <p className="mt-3 text-center text-xs text-white/45">{nextMatch.ground}</p>
               )}
+            </div>
+          ) : topWatch ? (
+            <div className="rounded-xl border border-white/15 bg-black/45 px-4 py-5 text-center backdrop-blur-sm">
+              <p className="text-[11px] font-semibold text-white/55">
+                주목 경기 · {topWatch.group}조
+              </p>
+              <div className="mt-3 flex flex-wrap items-center justify-center gap-3 text-lg font-bold text-white">
+                <TeamLabel name={topWatch.team1} className="flex-row-reverse text-white" />
+                <span className="font-mono text-xl text-white/30">VS</span>
+                <TeamLabel name={topWatch.team2} className="text-white" />
+              </div>
+              <div className="mt-3 font-mono text-3xl font-bold tabular-nums md:text-4xl">
+                {!now ? (
+                  <span className="text-white/40">--:--:--</span>
+                ) : topWatch.kickoff != null && topWatch.kickoff - now <= 0 ? (
+                  <span className="inline-flex items-center gap-2 text-[var(--color-kor-red)]">
+                    <span className="pulse-dot size-2 rounded-full bg-[var(--color-kor-red)]" />
+                    진행 중
+                  </span>
+                ) : (
+                  <span className="text-[var(--color-kor-red)]">
+                    {topWatch.kickoff != null ? countdownLabel(topWatch.kickoff - now) : "--:--:--"}
+                  </span>
+                )}
+              </div>
+              <p className="mt-2 text-sm font-medium text-white/75">
+                ⚠ {dangerText(topWatch)}
+              </p>
+              <a
+                href="/matches#watch"
+                className="mt-3 inline-block rounded-full border border-white/20 px-3 py-1 text-xs font-semibold text-white/70 transition-colors hover:border-white/40 hover:text-white"
+              >
+                주목 경기 더보기 →
+              </a>
+              <div className="mt-4 border-t border-white/10 pt-3">
+                <WatchLinks tone="hero" />
+              </div>
             </div>
           ) : lastMatch ? (
             <div className="rounded-xl border border-white/15 bg-black/45 px-4 py-5 text-center backdrop-blur-sm">

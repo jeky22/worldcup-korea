@@ -29,10 +29,13 @@ function faviconUrl(domain: string) {
   return `https://www.google.com/s2/favicons?domain=${domain}&sz=32`;
 }
 
-export function WatchLinks() {
+export function WatchLinks({ tone = "default" }: { tone?: "default" | "hero" }) {
+  const isHero = tone === "hero";
   return (
     <div className="flex flex-wrap items-center justify-center gap-1.5">
-      <span className="mr-0.5 text-[11px] text-muted">중계</span>
+      <span className={`mr-0.5 text-[11px] ${isHero ? "text-white/60" : "text-muted"}`}>
+        중계
+      </span>
       {LINKS.map((l) => (
         <a
           key={l.label}
@@ -40,7 +43,11 @@ export function WatchLinks() {
           target="_blank"
           rel="noopener noreferrer"
           title={`${l.label} — ${l.desc}`}
-          className="inline-flex items-center gap-1.5 rounded-md border bg-[var(--color-card)] px-2 py-1 text-[11px] font-medium transition-colors hover:border-primary/30 hover:text-primary"
+          className={`inline-flex items-center gap-1.5 rounded-md px-2 py-1 text-[11px] font-medium transition-colors ${
+            isHero
+              ? " bg-white/10 text-white/90 hover:border-white/40 hover:text-white"
+              : " bg-[var(--color-card)] hover:border-primary/30 hover:text-primary"
+          }`}
         >
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img

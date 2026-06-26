@@ -5,6 +5,7 @@ import { computeStandings } from "@/lib/standings";
 import { analyzeGroup, focusBranches, analyzeThirdFollowUp } from "@/lib/scenario/engine";
 import { focusThirdPlaceWildcard } from "@/lib/scenario/third-place";
 import { analyzeKoreaSurvival } from "@/lib/scenario/korea-survival";
+import { getWatchMatches } from "@/lib/scenario/watch-matches";
 import { koreaKnockout } from "@/lib/bracket";
 import { KOREA, teamKo, getTeam } from "@/lib/teams";
 import { kstDate, kstStamp } from "@/lib/format";
@@ -13,7 +14,6 @@ import { HomeHero } from "@/components/home-hero";
 import { ScenarioSummary } from "@/components/scenario-summary";
 import { MatchList } from "@/components/match-list";
 import { ScoreboardStrip } from "@/components/scoreboard-strip";
-import { WatchLinks } from "@/components/watch-links";
 import { KoreaGroupTabs } from "@/components/korea-group-tabs";
 import { HighlightVideos } from "@/components/highlight-videos";
 import { NewsFeed } from "@/components/news-feed";
@@ -21,7 +21,7 @@ import { DataError } from "@/components/data-error";
 import { Reveal, CountUp } from "@/components/motion";
 import { IconPlay, IconNews } from "@/components/icons";
 import { JsonLd } from "@/components/json-ld";
-import { AdBanner, AdInFeed } from "@/components/ads/ad-unit";
+import { AdBanner } from "@/components/ads/ad-unit";
 import { pageMetadata, sportsEventJsonLd, faqJsonLd } from "@/lib/seo";
 
 export const metadata = pageMetadata({
@@ -74,6 +74,8 @@ export default async function HomePage() {
   const koreaLast = matches
     .filter((m) => (m.team1 === KOREA || m.team2 === KOREA) && m.score)
     .sort((a, b) => (b.kickoff ?? 0) - (a.kickoff ?? 0))[0];
+
+  const watchMatches = getWatchMatches(matches);
 
   const todayLabel = kstDate(Date.now());
   const todayMatches = matches
@@ -128,11 +130,8 @@ export default async function HomePage() {
               }
             : undefined
         }
+        watchMatches={watchMatches}
       />
-
-      <Reveal delay={60}>
-        <WatchLinks />
-      </Reveal>
 
       <AdBanner className="my-2" />
 
@@ -206,7 +205,7 @@ export default async function HomePage() {
         />
       </Reveal>
 
-      <AdInFeed className="my-2" />
+      <AdBanner className="my-2" />
 
       {/* 뉴스 */}
       <Reveal as="section" delay={40}>

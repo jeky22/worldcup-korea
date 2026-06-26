@@ -9,7 +9,11 @@ function prefersReduced(): boolean {
   );
 }
 
-function useInView<T extends HTMLElement>(threshold = 0.15) {
+function useInView<T extends HTMLElement>(
+  threshold = 0,
+  // 뷰포트 아래로 400px 들어오기 전에 미리 트리거해 "빈 칸"이 보이지 않게 한다.
+  rootMargin = "0px 0px 400px 0px",
+) {
   const ref = useRef<T>(null);
   const [inView, setInView] = useState(false);
   useEffect(() => {
@@ -28,11 +32,11 @@ function useInView<T extends HTMLElement>(threshold = 0.15) {
           }
         }
       },
-      { threshold },
+      { threshold, rootMargin },
     );
     io.observe(el);
     return () => io.disconnect();
-  }, [threshold]);
+  }, [threshold, rootMargin]);
   return { ref, inView };
 }
 
@@ -83,7 +87,7 @@ export function CountUp({
   prefix?: string;
   className?: string;
 }) {
-  const { ref, inView } = useInView<HTMLSpanElement>(0.3);
+  const { ref, inView } = useInView<HTMLSpanElement>();
   const [n, setN] = useState(0);
   const done = useRef(false);
 
@@ -168,7 +172,7 @@ export function GrowBar({
   delay?: number;
   title?: string;
 }) {
-  const { ref, inView } = useInView<HTMLDivElement>(0.3);
+  const { ref, inView } = useInView<HTMLDivElement>();
   return (
     <div
       ref={ref}

@@ -16,6 +16,8 @@ export interface Team {
   group: GroupId;
   /** FIFA World Ranking (Nov 2025 basis, approximate) */
   fifaRank: number;
+  /** FIFA/Coca-Cola World Ranking points (19 Nov 2025 official). Elo 확률 모델 입력값. */
+  fifaPoints: number;
 }
 
 export type MatchStage =

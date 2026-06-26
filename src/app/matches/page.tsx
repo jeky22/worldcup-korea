@@ -1,8 +1,10 @@
 import { getDataset } from "@/lib/data";
 import { KOREA } from "@/lib/teams";
 import { kstStamp } from "@/lib/format";
+import { getWatchMatches } from "@/lib/scenario/watch-matches";
 import { SourceFooter } from "@/components/ui";
 import { MatchesBrowser } from "@/components/matches-browser";
+import { WatchMatches } from "@/components/watch-matches";
 import { DataError } from "@/components/data-error";
 import { JsonLd } from "@/components/json-ld";
 import { AdBanner } from "@/components/ads/ad-unit";
@@ -27,6 +29,7 @@ export default async function MatchesPage() {
   }
 
   const stamp = kstStamp(data.fetchedAt);
+  const watchMatches = getWatchMatches(data.matches);
 
   return (
     <div className="flex flex-col gap-4">
@@ -42,6 +45,8 @@ export default async function MatchesPage() {
           전체 104경기 · 시간은 한국시간(KST) 기준
         </p>
       </header>
+
+      {watchMatches.length > 0 && <WatchMatches matches={watchMatches} />}
 
       <AdBanner />
 

@@ -95,6 +95,11 @@ export default async function ScenarioPage({
           남은 경기의 모든 스코어 조합을 FIFA 2026 순위 규정대로 계산한 월드컵 경우의수
         </p>
       </header>
+  {/* 3위 와일드카드 */}
+  <section>
+        <SectionHeading>조 3위 와일드카드 경쟁</SectionHeading>
+        <ThirdPlaceTable rows={thirds} highlightGroup={group} />
+      </section>
 
       <AdBanner />
 
@@ -198,12 +203,7 @@ export default async function ScenarioPage({
         </section>
       )}
 
-      {/* 3위 와일드카드 */}
-      <section>
-        <SectionHeading>조 3위 와일드카드 경쟁</SectionHeading>
-        <ThirdPlaceTable rows={thirds} highlightGroup={group} />
-      </section>
-
+    
       <SourceFooter
         sources={["openfootball", "FIFA 규정 타이브레이커"]}
         fetchedAt={stamp}

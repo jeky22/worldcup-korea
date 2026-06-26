@@ -2,10 +2,11 @@ import type { GroupId, Match } from "../types";
 import { GROUP_IDS } from "../teams";
 import { computeStandings, type Result } from "../standings";
 import { thirdPlaceTable, type ThirdPlaceRow } from "./third-place";
+import { sampleScoreline } from "./match-odds";
 
 /** 몬테카를로 표본 수 (revalidate=3600으로 시간당 1회만 계산) */
 const SAMPLES = 50_000;
-/** 타 조 남은 경기 스코어 상한 (현실적 범위: 0~4골) */
+/** 타 조 남은 경기 스코어 상한 (각 결과 버킷 내 0~4골 균등) */
 const MC_CAP = 4;
 
 type WDL = "W" | "D" | "L";
@@ -80,12 +81,6 @@ export interface WildcardRaceAnalysis {
   incompleteGroups: number;
 }
 
-function scorelines(cap: number): [number, number][] {
-  const out: [number, number][] = [];
-  for (let a = 0; a <= cap; a++) for (let b = 0; b <= cap; b++) out.push([a, b]);
-  return out;
-}
-
 function wdl(sa: number, sb: number): WDL {
   if (sa > sb) return "W";
   if (sa < sb) return "L";
@@ -125,33 +120,25 @@ function mergeAllPicks(matches: Match[], picks: Map<GroupId, Result[]>): Match[]
   return out;
 }
 
-function remainingInGroup(matches: Match[], group: GroupId) {
+interface RemainingRef {
+  id: string;
+  team1: string;
+  team2: string;
+}
+
+function remainingInGroup(matches: Match[], group: GroupId): RemainingRef[] {
   return matches
     .filter((m) => m.group === group && !m.score && m.team1 && m.team2)
     .sort((a, b) => (a.kickoff ?? 0) - (b.kickoff ?? 0))
     .map((m) => ({ id: m.id, team1: m.team1, team2: m.team2 }));
 }
 
-function enumerateGroupCombos(matches: Match[], group: GroupId): Result[][] {
-  const remaining = remainingInGroup(matches, group);
-  if (remaining.length === 0) return [];
-
-  const lines = scorelines(MC_CAP);
-  const out: Result[][] = [];
-  const rec = (i: number, acc: Result[]) => {
-    if (i === remaining.length) {
-      out.push([...acc]);
-      return;
-    }
-    const m = remaining[i];
-    for (const [sa, sb] of lines) {
-      acc.push({ a: m.team1, b: m.team2, sa, sb });
-      rec(i + 1, acc);
-      acc.pop();
-    }
-  };
-  rec(0, []);
-  return out;
+/** 한 조의 남은 경기를 Elo 분포로 1회 표본추출 */
+function sampleGroup(remaining: RemainingRef[]): Result[] {
+  return remaining.map((m) => {
+    const [sa, sb] = sampleScoreline(m.team1, m.team2, MC_CAP);
+    return { a: m.team1, b: m.team2, sa, sb };
+  });
 }
 
 interface MatchMeta {
@@ -180,9 +167,10 @@ function findMatchMeta(matches: Match[], group: GroupId, r: Result): MatchMeta {
 }
 
 /**
- * 포커스 팀이 조 3위 확정일 때, 타 조 남은 경기 스코어 조합(몬테카를로)으로
+ * 포커스 팀이 조 3위 확정일 때, 타 조 남은 경기 스코어(몬테카를로)으로
  * 12개 조 3위 와일드카드(상위 8) 진출 확률·순위 분포·경기별 득실 시나리오를 계산.
- * 모델: 타 조 남은 경기의 모든 스코어(0~4골)를 동일 확률로 가정.
+ * 모델: 각 경기 승/무/패 확률을 FIFA 랭킹 포인트 기반 Elo 모델로 산출하고,
+ *       각 결과 버킷(0~4골) 안의 스코어라인을 균등 추출한다.
  */
 export function analyzeWildcardRace(
   matches: Match[],
@@ -198,14 +186,14 @@ export function analyzeWildcardRace(
   const focusRow = snapshot.find((r) => r.group === focusGroup);
   if (!focusRow) return null;
 
-  const groupCombos = new Map<GroupId, Result[][]>();
+  const groupRemaining = new Map<GroupId, RemainingRef[]>();
   let remainingMatches = 0;
   for (const g of GROUP_IDS) {
     if (g === focusGroup) continue;
-    const combos = enumerateGroupCombos(matches, g);
-    if (combos.length > 0) {
-      groupCombos.set(g, combos);
-      remainingMatches += remainingInGroup(matches, g).length;
+    const rem = remainingInGroup(matches, g);
+    if (rem.length > 0) {
+      groupRemaining.set(g, rem);
+      remainingMatches += rem.length;
     }
   }
 
@@ -218,7 +206,7 @@ export function analyzeWildcardRace(
   ).length;
 
   // 남은 경기가 없으면 현재 스냅샷이 곧 최종
-  if (groupCombos.size === 0) {
+  if (groupRemaining.size === 0) {
     const groupTable: GroupThirdRow[] = snapshot.map((r) => ({
       group: r.group,
       team: r.team,
@@ -247,7 +235,7 @@ export function analyzeWildcardRace(
     };
   }
 
-  const groupKeys = [...groupCombos.keys()];
+  const groupKeys = [...groupRemaining.keys()];
   const rankHist = new Map<number, number>();
   let focusQualifyCount = 0;
   const groupQualifyCount = new Map<GroupId, number>();
@@ -260,8 +248,7 @@ export function analyzeWildcardRace(
   for (let s = 0; s < SAMPLES; s++) {
     const picks = new Map<GroupId, Result[]>();
     for (const g of groupKeys) {
-      const list = groupCombos.get(g)!;
-      picks.set(g, list[(Math.random() * list.length) | 0]);
+      picks.set(g, sampleGroup(groupRemaining.get(g)!));
     }
 
     const merged = mergeAllPicks(matches, picks);

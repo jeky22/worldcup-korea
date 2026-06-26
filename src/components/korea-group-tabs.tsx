@@ -10,6 +10,7 @@ import type {
 } from "@/lib/scenario/korea-survival";
 import type { GroupId, StandingRow } from "@/lib/types";
 import { teamKo } from "@/lib/teams";
+import { describeDanger } from "@/lib/scenario/danger-text";
 import { kstDate } from "@/lib/format";
 import { StandingsTable } from "./standings-table";
 import { KoreaKnockout } from "./korea-knockout";
@@ -55,12 +56,18 @@ const STATUS_STYLE: Record<
 
 function SurvivalRow({ g }: { g: SurvivalGroup }) {
   const s = STATUS_STYLE[g.status];
-  const dangerTeams =
-    g.dangerResult === "W"
-      ? `${teamKo(g.dangerMatch!.team1)} 승`
-      : g.dangerResult === "L"
-        ? `${teamKo(g.dangerMatch!.team2)} 승`
-        : "무승부";
+  const danger =
+    g.status === "live" && g.dangerMatch
+      ? describeDanger({
+          team1: g.dangerMatch.team1,
+          team2: g.dangerMatch.team2,
+          dangerResult: g.dangerResult,
+          dangerThreatTeam: g.dangerThreatTeam,
+          dangerThresholdMargin: g.dangerThresholdMargin,
+          dangerAlways: g.dangerAlways,
+          dangerProb: g.dangerProb,
+        })
+      : null;
 
   return (
     <div
@@ -74,30 +81,66 @@ function SurvivalRow({ g }: { g: SurvivalGroup }) {
     >
       <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
         <span className="text-[11px] font-bold text-muted">{g.group}조</span>
-        <span className="font-semibold">{teamKo(g.team)}</span>
-        <span className="text-[11px] text-muted tnum">
-          {g.points}점·{formatGd(g.gd)}
-        </span>
+        {g.status === "live" ? (
+          <span className="font-semibold">3위 경쟁</span>
+        ) : (
+          <>
+            <span className="font-semibold">{teamKo(g.team)}</span>
+            {g.status !== "above" && (
+              <span className="text-[11px] text-muted tnum">
+                {g.points}점·{formatGd(g.gd)}
+              </span>
+            )}
+          </>
+        )}
         <span className={`ml-auto rounded px-1.5 py-0.5 text-[10px] font-bold ${s.cls}`}>
           {s.text}
         </span>
-        <span
-          className={`min-w-[2.6rem] text-right text-sm font-black tabular-nums ${
-            g.overtakeProb >= 0.6
-              ? "text-[var(--color-kor-red)]"
-              : g.overtakeProb <= 0.25
-                ? "text-muted"
-                : "text-ink"
-          }`}
-        >
-          {pct(g.overtakeProb, g.overtakeProb > 0 && g.overtakeProb < 0.01 ? 1 : 0)}
-        </span>
+        {g.status === "above" ? (
+          <span className="flex items-baseline gap-1">
+            <span className="text-[10px] font-medium text-muted">한국 추월</span>
+            <span className="text-sm font-black tabular-nums text-[var(--color-kor-red)]">
+              {g.points}점·{formatGd(g.gd)}
+            </span>
+          </span>
+        ) : (
+          <span className="flex items-baseline gap-1">
+            <span className="text-[10px] font-medium text-muted">한국 추월 확률</span>
+            <span
+              className={`min-w-[2.4rem] text-right text-sm font-black tabular-nums ${
+                g.overtakeProb >= 0.6
+                  ? "text-[var(--color-kor-red)]"
+                  : g.overtakeProb <= 0.25
+                    ? "text-muted"
+                    : "text-ink"
+              }`}
+            >
+              {pct(g.overtakeProb, g.overtakeProb > 0 && g.overtakeProb < 0.01 ? 1 : 0)}
+            </span>
+          </span>
+        )}
       </div>
-      {g.status === "live" && g.dangerMatch && (
+      {g.status === "live" && (
+        <p className="mt-1 text-[11px] text-muted">
+          {g.tiedTeams.length > 1 ? (
+            <>
+              {g.tiedTeams.map(teamKo).join("·")}
+              <span className="tnum"> {g.points}점 동률</span>
+            </>
+          ) : (
+            <>
+              현재 3위 {teamKo(g.team)}
+              <span className="tnum"> {g.points}점·{formatGd(g.gd)}</span>
+            </>
+          )}{" "}
+          · 순위 변동 가능
+        </p>
+      )}
+      {danger && g.dangerMatch && (
         <p className="mt-1 text-[11px] text-muted">
           ⚠ {teamKo(g.dangerMatch.team1)} vs {teamKo(g.dangerMatch.team2)} —{" "}
-          <span className="font-semibold text-[var(--color-kor-red)]">{dangerTeams}</span>{" "}
-          시 한국 추월
+          <span className="font-semibold text-[var(--color-kor-red)]">{danger.lead}</span>
+          {danger.tail}
           {g.dangerMatch.kickoff && (
             <span className="ml-1 tnum">· {kstDate(g.dangerMatch.kickoff)}</span>
           )}
@@ -184,6 +227,13 @@ function SurvivalPanel({ survival }: { survival: KoreaSurvival }) {
   const margin = survival.threshold - survival.aboveNow;
   const likely = [...survival.rankDistribution].sort((a, b) => b.share - a.share)[0];
 
+  // 진출 확률 계산식 설명용
+  const contested = survival.groups.filter(
+    (g) => g.overtakeProb > 0 && g.overtakeProb < 1,
+  );
+  // 경쟁 조 중 이만큼 이상이 추월하면 탈락 (확정 above 제외분)
+  const eliminateCut = survival.threshold - survival.aboveLocked;
+
   return (
     <div className="flex flex-col gap-4 p-4">
       {/* 핵심 요약 */}
@@ -242,11 +292,39 @@ function SurvivalPanel({ survival }: { survival: KoreaSurvival }) {
             {safe.map((g) => `${g.group}조 ${teamKo(g.team)}`).join(", ")}
           </p>
         )}
+
+        {/* 진출 확률 계산 방법 */}
+        {contested.length > 0 && eliminateCut > 0 && (
+          <div className="mt-3 rounded-xl border border-[var(--color-kor-gold)]/25 bg-[var(--color-kor-gold-soft)]/30 px-4 py-3">
+            <p className="text-[11px] font-bold text-[var(--color-kor-gold)]">
+              한국 와일드카드 진출 확률 계산 방법
+            </p>
+            <p className="mt-1.5 text-[11px] leading-relaxed text-muted">
+              12개 조 3위 중 상위 8팀이 진출. 한국 위가{" "}
+              <span className="font-semibold text-ink">확정 {survival.aboveLocked}개</span>,
+              결과가 갈리는{" "}
+              <span className="font-semibold text-ink">경쟁 {contested.length}개 조</span>가 남았어요.
+              경쟁 조 중{" "}
+              <span className="font-bold text-[var(--color-kor-red)]">{eliminateCut}개 이상</span>이
+              한국을 추월하면 9위 밖으로 밀려{" "}
+              <span className="font-semibold text-[var(--color-kor-red)]">탈락</span>.
+            </p>
+            <p className="mt-1.5 text-[11px] leading-relaxed text-muted">
+              진출 확률{" "}
+              <span className="font-bold text-[var(--color-kor-gold)]">
+                {pct(survival.qualifyRate, survival.qualifyRate < 0.01 ? 1 : 0)}
+              </span>{" "}
+              = 위 경쟁 {contested.length}개 조의 한국 추월 확률(각 행 오른쪽 %)을 독립으로 합성해{" "}
+              <span className="font-semibold text-ink">{eliminateCut - 1}개 이하</span>만 추월할 확률을
+              모두 더한 값이에요. (각 경기 승·무·패 확률은 FIFA 랭킹 포인트 기반 Elo 모델로 산출)
+            </p>
+          </div>
+        )}
       </div>
 
       <p className="text-[11px] leading-relaxed text-muted">
         12개 조 3위 중 상위 8팀 진출 · 한국은 현재 3위 중 {survival.aboveNow + 1}위 · 타 조 남은
-        경기 스코어 전수 계산 기준
+        경기는 FIFA 랭킹 포인트 기반 Elo 확률 모델로 계산
       </p>
     </div>
   );

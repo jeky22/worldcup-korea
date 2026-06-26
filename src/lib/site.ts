@@ -47,3 +47,7 @@ export function isIndexable(): boolean {
 
 /** 히어로 배경 영상 (public/hero/hero-bg.mp4) */
 export const HERO_VIDEO = "/hero/hero-bg.mp4";
+
+/** 사이트 로고 (public/logo/) */
+export const LOGO = "/logo/logo-56.png";
+export const LOGO_OG = "/logo/og-image.png";
