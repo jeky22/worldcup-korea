@@ -6,6 +6,7 @@ import { WatchLinks } from "./watch-links";
 import { teamKo } from "@/lib/teams";
 import { kstDateTime } from "@/lib/format";
 import type { WatchMatch } from "@/lib/scenario/watch-matches";
+import { describeDanger } from "@/lib/scenario/danger-text";
 
 export type { WatchMatch };
 
@@ -50,14 +51,9 @@ function Countdown({ target, now }: { target: number; now: number }) {
   );
 }
 
-function triggerText(m: WatchMatch): string {
-  if (m.dangerResult === "W") return `${teamKo(m.team1)} 승`;
-  if (m.dangerResult === "L") return `${teamKo(m.team2)} 승`;
-  return "무승부";
-}
-
 function MatchCard({ m, now }: { m: WatchMatch; now: number }) {
   const upcoming = m.kickoff != null && m.kickoff - now > 0;
+  const danger = describeDanger(m);
   return (
     <div className="flex min-w-[15rem] flex-1 flex-col gap-2.5 rounded-xl border border-[var(--color-kor-red)]/15 bg-[var(--color-card)] p-3.5">
       <div className="flex items-center justify-between">
@@ -82,12 +78,9 @@ function MatchCard({ m, now }: { m: WatchMatch; now: number }) {
       </div>
 
       <div className="rounded-lg bg-[var(--color-kor-red-soft)]/40 px-2.5 py-1.5">
-        <p className="text-xs font-semibold text-[var(--color-kor-red)]">
-          ⚠ {triggerText(m)} 시 한국 밀어내고 진출
-        </p>
-        <p className="mt-0.5 text-[11px] text-muted">
-          한국이 와일드카드에서 밀려 <span className="font-semibold text-[var(--color-kor-red)]">탈락 위험</span>{" "}
-          · 발생 확률 {Math.round(m.overtakeProb * 100)}%
+        <p className="text-xs text-muted">
+          ⚠ <span className="font-semibold text-[var(--color-kor-red)]">{danger.lead}</span>
+          {danger.tail}
         </p>
       </div>
 

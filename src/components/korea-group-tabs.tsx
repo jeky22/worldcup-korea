@@ -224,7 +224,7 @@ function ThirdRankTable({ rows }: { rows: ThirdRankRow[] }) {
 function SurvivalPanel({ survival }: { survival: KoreaSurvival }) {
   const danger = survival.groups.filter((g) => g.status !== "below");
   const safe = survival.groups.filter((g) => g.status === "below");
-  const margin = survival.threshold - survival.aboveNow;
+  const margin = survival.threshold - survival.aboveLocked;
   const likely = [...survival.rankDistribution].sort((a, b) => b.share - a.share)[0];
 
   // 진출 확률 계산식 설명용
@@ -257,13 +257,12 @@ function SurvivalPanel({ survival }: { survival: KoreaSurvival }) {
           </p>
           <p className="leading-none">
             <span className="text-3xl font-black tabular-nums text-[var(--color-kor-red)]">
-              {survival.aboveNow}
+              {survival.aboveLocked}
             </span>
             <span className="text-xl font-bold text-muted"> / {survival.threshold}</span>
           </p>
           <p className="mt-1 text-[11px] font-medium text-muted">
-            탈락하려면 {margin}개 조에서 한국보다 좋은 3위가 더 나와야 함
-            {survival.aboveLocked > 0 && ` (확정 ${survival.aboveLocked}개)`}
+            확정으로 한국 위로 간 조 · 탈락하려면 {margin}개 조에서 한국보다 좋은 3위가 더 나와야 함
           </p>
         </div>
       </div>
