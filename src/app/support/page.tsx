@@ -66,22 +66,21 @@ export default function SupportPage() {
         <div className="mt-3 space-y-3 text-[15px] leading-relaxed text-muted">
           <p>
             경기마다 뒤집히는 순위를 계산하겠다고 FIFA 타이브레이커 규정을
-            파고들고, 조별 경우의 수 엔진을 며칠 밤새워 만들었습니다.
+            파고들고, 조별 경우의 수 엔진을 며칠 밤새워 만들었습니다. Elo 모델을 사용해 승무패를 계산하고, 남은 경기 스코어 조합을 경우의 수를 계산했습니다.
           </p>
           <p>
-            감사하게도 사람이 몰려서 서버가 버티질 못해, 결국{" "}
+            여기에 감사하게도 사람이 몰려서 서버가 버티질 못해, 결국{" "}
             <span className="font-medium text-ink">유료 플랜(그것도 비싼 걸로)</span>
             까지 올렸는데…
           </p>
           <p>
             정작 <span className="font-medium text-ink">광고 심사는 통과도 하기 전에</span>,
-            우리 대표팀이 곧 작별 인사를 할 것 같습니다. 서버비는
-            따박따박 나가는데 수익은 <span className="font-medium text-ink">0원</span>,
+            우리 대표팀이 곧 작별 인사를 할 것 같습니다. 서버비는 증설되어 날아가지만,
+            수익은 <span className="font-medium text-ink">0원</span>,
           </p>
           <p className="text-ink/90">
             혹시 이 사이트가 0.1%라도 도움이 되셨다면, 따뜻한 커피 한 잔으로
-            우울한 개발자를 일으켜 주세요. 여러분의 커피 한 잔이 다음 대회까지
-            이 서버를 살립니다. 🙏
+            우울한 개발자를 일으켜 주세요. 여러분의 커피 한 잔이 개발자를 살립니다. 🙏
           </p>
         </div>
 
