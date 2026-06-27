@@ -3,6 +3,7 @@ import { JetBrains_Mono } from "next/font/google";
 import "./globals.css";
 import { SiteNav } from "@/components/site-nav";
 import { AdProvider } from "@/components/ads/ad-provider";
+import { PushAd } from "@/components/ads/push-ad";
 import { JsonLd } from "@/components/json-ld";
 import { rootMetadata, websiteJsonLd } from "@/lib/seo";
 import { ADSENSE_CLIENT } from "@/lib/ads";
@@ -42,6 +43,7 @@ export default function RootLayout({
       </head>
       <body className="flex min-h-full flex-col pb-16 md:pb-0">
         <AdProvider />
+        <PushAd />
         <JsonLd data={websiteJsonLd()} />
         <SiteNav />
         <main className="mx-auto w-full max-w-5xl flex-1 px-4 py-6 md:px-6 md:py-8">
