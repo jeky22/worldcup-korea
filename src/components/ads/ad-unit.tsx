@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import {
+  ADS_ENABLED,
   ADSENSE_CLIENT,
   ADSENSE_SLOT,
   ADFIT_ENABLED,
@@ -85,6 +86,8 @@ export function AdUnit({
  */
 export function AdBanner({ className = "" }: { className?: string }) {
   const wide = useIsWide(768);
+
+  if (!ADS_ENABLED) return null;
 
   if (ADFIT_ENABLED) {
     if (wide === null) return null;

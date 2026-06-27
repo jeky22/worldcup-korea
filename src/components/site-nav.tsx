@@ -10,6 +10,7 @@ import {
   IconScenario,
   IconBracket,
   IconTeam,
+  IconHeart,
 } from "./icons";
 import { LOGO } from "@/lib/site";
 
@@ -48,6 +49,7 @@ const LINKS: {
   { href: "/scenario", label: "시나리오", Icon: IconScenario, match: (p) => p.startsWith("/scenario") },
   { href: "/bracket", label: "대진표", Icon: IconBracket, match: (p) => p.startsWith("/bracket") },
   { href: "/teams", label: "팀", Icon: IconTeam, match: (p) => p.startsWith("/teams") },
+  { href: "/support", label: "후원", Icon: IconHeart, match: (p) => p.startsWith("/support") },
 ];
 
 export function SiteNav() {

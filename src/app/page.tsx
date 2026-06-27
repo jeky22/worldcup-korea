@@ -19,6 +19,7 @@ import { HighlightVideos } from "@/components/highlight-videos";
 import { NewsFeed } from "@/components/news-feed";
 import { DataError } from "@/components/data-error";
 import { Reveal, CountUp } from "@/components/motion";
+import { NoticePopup } from "@/components/notice-popup";
 import { IconPlay, IconNews } from "@/components/icons";
 import { JsonLd } from "@/components/json-ld";
 import { AdBanner } from "@/components/ads/ad-unit";
@@ -86,6 +87,7 @@ export default async function HomePage() {
 
   return (
     <div className="flex flex-col gap-10">
+      <NoticePopup />
       <JsonLd
         data={[
           sportsEventJsonLd(),

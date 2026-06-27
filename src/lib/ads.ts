@@ -1,3 +1,9 @@
+/** 광고 전체 표시 여부 마스터 스위치.
+ *  기본 OFF — 화면에 보이는 광고(카카오 애드핏 등)를 전부 숨긴다.
+ *  다시 켜려면 Vercel에 NEXT_PUBLIC_ADS=on 설정. */
+export const ADS_ENABLED =
+  (process.env.NEXT_PUBLIC_ADS ?? "off").toLowerCase() === "on";
+
 /** Google AdSense — Vercel 환경 변수로 덮어쓰기 가능 */
 
 const DEFAULT_CLIENT = "ca-pub-8205819697788557";

@@ -100,6 +100,15 @@ export function IconExternal(p: IconProps) {
   );
 }
 
+/** 후원 (하트) */
+export function IconHeart(p: IconProps) {
+  return (
+    <svg {...base} {...p}>
+      <path d="M12 20.5 4.2 12.8a4.6 4.6 0 0 1 6.5-6.5l1.3 1.3 1.3-1.3a4.6 4.6 0 0 1 6.5 6.5z" />
+    </svg>
+  );
+}
+
 /** 라이브 중계 (방송) */
 export function IconBroadcast(p: IconProps) {
   return (
