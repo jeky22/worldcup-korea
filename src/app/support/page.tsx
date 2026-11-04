@@ -9,6 +9,7 @@ export const metadata = pageMetadata({
     "월드컵 경우의수를 만든 개발자를 응원해주세요. 끝까지 뛴 대표팀에게 보내는 박수와, 우울한 개발자를 위한 커피 한 잔.",
   path: "/support",
   keywords: ["개발자 후원", "buy me a coffee", "월드컵 경우의수 후원"],
+  noIndex: true,
 });
 
 export default function SupportPage() {

@@ -19,10 +19,10 @@ import { HighlightVideos } from "@/components/highlight-videos";
 import { NewsFeed } from "@/components/news-feed";
 import { DataError } from "@/components/data-error";
 import { Reveal, CountUp } from "@/components/motion";
-import { NoticePopup } from "@/components/notice-popup";
 import { IconPlay, IconNews } from "@/components/icons";
 import { JsonLd } from "@/components/json-ld";
 import { AdBanner } from "@/components/ads/ad-unit";
+import { NextTournaments } from "@/components/next-tournaments";
 import { pageMetadata, sportsEventJsonLd, faqJsonLd } from "@/lib/seo";
 
 export const metadata = pageMetadata({
@@ -87,7 +87,6 @@ export default async function HomePage() {
 
   return (
     <div className="flex flex-col gap-10">
-      <NoticePopup />
       <JsonLd
         data={[
           sportsEventJsonLd(),
@@ -207,6 +206,20 @@ export default async function HomePage() {
         />
       </Reveal>
 
+      {/* 다음 대회 */}
+      <Reveal as="section" delay={40}>
+        <SectionHeading
+          aside={
+            <Link href="/next" className="text-accent hover:underline">
+              자세히 보기 →
+            </Link>
+          }
+        >
+          다음 대회
+        </SectionHeading>
+        <NextTournaments />
+      </Reveal>
+
       <AdBanner className="my-2" />
 
       {/* 뉴스 */}
@@ -254,24 +267,27 @@ export default async function HomePage() {
         <ScoreboardStrip matches={matches} />
       </Reveal>
 
-      {/* 하이라이트 영상 */}
-      <Reveal as="section" delay={40}>
-        <SectionHeading
-          aside={
-            <span className="inline-flex items-center gap-1 text-xs text-muted">
-              <IconPlay width={13} height={13} /> FIFA 공식
-            </span>
-          }
-        >
-          하이라이트 영상
-        </SectionHeading>
-        <HighlightVideos videos={videos} />
-        <SourceFooter
-          sources={["openfootball", "FIFA·연합뉴스·동아 RSS"]}
-          fetchedAt={stamp}
-          note="순위·시나리오는 자체 계산"
-        />
-      </Reveal>
+      {/* 하이라이트 영상 — 불러온 경우에만 노출 */}
+      {videos.length > 0 && (
+        <Reveal as="section" delay={40}>
+          <SectionHeading
+            aside={
+              <span className="inline-flex items-center gap-1 text-xs text-muted">
+                <IconPlay width={13} height={13} /> FIFA 공식
+              </span>
+            }
+          >
+            하이라이트 영상
+          </SectionHeading>
+          <HighlightVideos videos={videos} />
+        </Reveal>
+      )}
+
+      <SourceFooter
+        sources={["openfootball", "FIFA·연합뉴스·동아 RSS"]}
+        fetchedAt={stamp}
+        note="순위·시나리오는 자체 계산"
+      />
     </div>
   );
 }

@@ -68,13 +68,7 @@ function VideoCard({ v }: { v: VideoItem }) {
 }
 
 export function HighlightVideos({ videos }: { videos: VideoItem[] }) {
-  if (videos.length === 0) {
-    return (
-      <div className="rounded-xl border border-dashed py-8 text-center text-sm text-muted">
-        하이라이트 영상을 불러오지 못했습니다.
-      </div>
-    );
-  }
+  if (videos.length === 0) return null;
   return (
     <div>
       <div className="grid grid-cols-2 gap-3 lg:grid-cols-3">

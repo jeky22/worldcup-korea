@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from "next";
 import { JetBrains_Mono } from "next/font/google";
 import "./globals.css";
 import { SiteNav } from "@/components/site-nav";
+import { SiteFooter } from "@/components/site-footer";
 import { AdProvider } from "@/components/ads/ad-provider";
 import { JsonLd } from "@/components/json-ld";
 import { rootMetadata, websiteJsonLd } from "@/lib/seo";
@@ -47,6 +48,7 @@ export default function RootLayout({
         <main className="mx-auto w-full max-w-5xl flex-1 px-4 py-6 md:px-6 md:py-8">
           {children}
         </main>
+        <SiteFooter />
       </body>
     </html>
   );

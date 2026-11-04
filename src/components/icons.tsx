@@ -13,6 +13,19 @@ const base = {
   strokeLinejoin: "round" as const,
 };
 
+/** 다음 대회 (트로피) */
+export function IconTrophy(p: IconProps) {
+  return (
+    <svg {...base} {...p}>
+      <path d="M8 21h8" />
+      <path d="M12 17v4" />
+      <path d="M7 4h10v5a5 5 0 0 1-10 0z" />
+      <path d="M7 6H4a1 1 0 0 0-1 1 4 4 0 0 0 4 4" />
+      <path d="M17 6h3a1 1 0 0 1 1 1 4 4 0 0 1-4 4" />
+    </svg>
+  );
+}
+
 /** 홈 */
 export function IconHome(p: IconProps) {
   return (

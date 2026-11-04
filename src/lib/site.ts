@@ -4,7 +4,7 @@ export const SITE_NAME = "월드컵 경우의수";
 export const SITE_SHORT_NAME = "월드컵 경우의수";
 
 export const SITE_DESCRIPTION =
-  "월드컵 경우의수 사이트 — 2026 FIFA 월드컵 조별리그 진출 경우의 수를 FIFA 규정대로 계산. 대한민국 32강 시나리오, A조 순위, 경기 일정·대진표·팀 명단.";
+  "월드컵 경우의수 — 2026 FIFA 월드컵 진출 경우의 수 계산과 대회 기록 아카이브. 아시안컵·올림픽 등 대한민국 대표팀의 다음 대회 일정까지 한곳에서.";
 
 export const SITE_KEYWORDS = [
   "월드컵 경우의수",
@@ -18,8 +18,10 @@ export const SITE_KEYWORDS = [
   "월드컵 시나리오",
   "월드컵 순위",
   "월드컵 대진표",
-  "32강 진출",
-  "조별리그",
+  "아시안컵 일정",
+  "2027 아시안컵",
+  "올림픽 축구",
+  "2030 월드컵",
 ];
 
 /** 프로덕션 도메인 — Vercel 환경변수 미설정 시 fallback */
@@ -44,6 +46,9 @@ export function isIndexable(): boolean {
   if (process.env.NEXT_PUBLIC_NOINDEX === "1") return false;
   return true;
 }
+
+/** 문의 이메일 — 비워두면 문의 안내가 노출되지 않음 */
+export const CONTACT_EMAIL = process.env.NEXT_PUBLIC_CONTACT_EMAIL ?? "";
 
 /** 히어로 배경 영상 (public/hero/hero-bg.mp4) */
 export const HERO_VIDEO = "/hero/hero-bg.mp4";

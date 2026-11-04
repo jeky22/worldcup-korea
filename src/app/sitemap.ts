@@ -11,6 +11,9 @@ export default function sitemap(): MetadataRoute.Sitemap {
     { url: absoluteUrl("/scenario"), lastModified: now, changeFrequency: "hourly", priority: 0.95 },
     { url: absoluteUrl("/bracket"), lastModified: now, changeFrequency: "daily", priority: 0.85 },
     { url: absoluteUrl("/teams"), lastModified: now, changeFrequency: "weekly", priority: 0.8 },
+    { url: absoluteUrl("/next"), lastModified: now, changeFrequency: "weekly", priority: 0.85 },
+    { url: absoluteUrl("/about"), lastModified: now, changeFrequency: "monthly", priority: 0.3 },
+    { url: absoluteUrl("/privacy"), lastModified: now, changeFrequency: "monthly", priority: 0.2 },
   ];
 
   const teamPages: MetadataRoute.Sitemap = TEAMS.map((t) => ({
